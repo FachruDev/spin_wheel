@@ -1,18 +1,20 @@
 # Build from the project root with:
 # docker build -f undian_server/Dockerfile .
 
-# Build stage
-FROM dart:3.8.0 AS build
+# Build stage. Samakan versi Dart dengan yang dipakai di laptop pengembang.
+FROM dart:3.11.4 AS build
 
 # Create a minimal workspace that preserves locked server dependency versions.
 WORKDIR /app
 COPY pubspec.lock .
+COPY undian_core undian_core
 COPY undian_server undian_server
 RUN printf '%s\n' \
   'name: _' \
   'environment:' \
   '  sdk: ^3.8.0' \
   'workspace:' \
+  '  - undian_core' \
   '  - undian_server' \
   > pubspec.yaml
 RUN dart pub get

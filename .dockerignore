@@ -1,0 +1,14 @@
+# Konteks build Docker adalah root repo. Jangan kirim rahasia atau hasil build lokal.
+.git
+**/.dart_tool
+**/build
+**/.idea
+**/config/passwords.yaml
+deploy/.env
+deploy/backups
+deploy/certbot
+undian_server/web/app
+undian_flutter/android
+undian_flutter/ios
+undian_flutter/linux
+undian_flutter/windows

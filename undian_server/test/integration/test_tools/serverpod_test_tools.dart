@@ -14,7 +14,8 @@
 import 'package:serverpod_test/serverpod_test.dart' as _i1;
 import 'package:serverpod/serverpod.dart' as _i2;
 import 'dart:async' as _i3;
-import 'package:serverpod_auth_core_server/serverpod_auth_core_server.dart' as _i4;
+import 'package:serverpod_auth_core_server/serverpod_auth_core_server.dart'
+    as _i4;
 import 'package:undian_server/src/generated/draw_result.dart' as _i5;
 import 'package:undian_server/src/generated/prize_winner.dart' as _i6;
 import 'package:undian_server/src/generated/winner_status.dart' as _i7;
@@ -155,7 +156,8 @@ class TestEndpoints {
   late final _PrizeEndpoint prize;
 }
 
-class _InternalTestEndpoints extends TestEndpoints implements _i1.InternalTestEndpoints {
+class _InternalTestEndpoints extends TestEndpoints
+    implements _i1.InternalTestEndpoints {
   @override
   void initialize(
     _i2.SerializationManager serializationManager,
@@ -208,10 +210,11 @@ class _EmailIdpEndpoint {
     required String password,
   }) async {
     return _i1.callAwaitableFunctionAndHandleExceptions(() async {
-      var _localUniqueSession = (sessionBuilder as _i1.InternalTestSessionBuilder).internalBuild(
-        endpoint: 'emailIdp',
-        method: 'login',
-      );
+      var _localUniqueSession =
+          (sessionBuilder as _i1.InternalTestSessionBuilder).internalBuild(
+            endpoint: 'emailIdp',
+            method: 'login',
+          );
       try {
         var _localCallContext = await _endpointDispatch.getMethodCallContext(
           createSessionCallback: (_) => _localUniqueSession,
@@ -241,10 +244,11 @@ class _EmailIdpEndpoint {
     required String email,
   }) async {
     return _i1.callAwaitableFunctionAndHandleExceptions(() async {
-      var _localUniqueSession = (sessionBuilder as _i1.InternalTestSessionBuilder).internalBuild(
-        endpoint: 'emailIdp',
-        method: 'startRegistration',
-      );
+      var _localUniqueSession =
+          (sessionBuilder as _i1.InternalTestSessionBuilder).internalBuild(
+            endpoint: 'emailIdp',
+            method: 'startRegistration',
+          );
       try {
         var _localCallContext = await _endpointDispatch.getMethodCallContext(
           createSessionCallback: (_) => _localUniqueSession,
@@ -272,10 +276,11 @@ class _EmailIdpEndpoint {
     required String verificationCode,
   }) async {
     return _i1.callAwaitableFunctionAndHandleExceptions(() async {
-      var _localUniqueSession = (sessionBuilder as _i1.InternalTestSessionBuilder).internalBuild(
-        endpoint: 'emailIdp',
-        method: 'verifyRegistrationCode',
-      );
+      var _localUniqueSession =
+          (sessionBuilder as _i1.InternalTestSessionBuilder).internalBuild(
+            endpoint: 'emailIdp',
+            method: 'verifyRegistrationCode',
+          );
       try {
         var _localCallContext = await _endpointDispatch.getMethodCallContext(
           createSessionCallback: (_) => _localUniqueSession,
@@ -306,10 +311,11 @@ class _EmailIdpEndpoint {
     required String password,
   }) async {
     return _i1.callAwaitableFunctionAndHandleExceptions(() async {
-      var _localUniqueSession = (sessionBuilder as _i1.InternalTestSessionBuilder).internalBuild(
-        endpoint: 'emailIdp',
-        method: 'finishRegistration',
-      );
+      var _localUniqueSession =
+          (sessionBuilder as _i1.InternalTestSessionBuilder).internalBuild(
+            endpoint: 'emailIdp',
+            method: 'finishRegistration',
+          );
       try {
         var _localCallContext = await _endpointDispatch.getMethodCallContext(
           createSessionCallback: (_) => _localUniqueSession,
@@ -339,10 +345,11 @@ class _EmailIdpEndpoint {
     required String email,
   }) async {
     return _i1.callAwaitableFunctionAndHandleExceptions(() async {
-      var _localUniqueSession = (sessionBuilder as _i1.InternalTestSessionBuilder).internalBuild(
-        endpoint: 'emailIdp',
-        method: 'startPasswordReset',
-      );
+      var _localUniqueSession =
+          (sessionBuilder as _i1.InternalTestSessionBuilder).internalBuild(
+            endpoint: 'emailIdp',
+            method: 'startPasswordReset',
+          );
       try {
         var _localCallContext = await _endpointDispatch.getMethodCallContext(
           createSessionCallback: (_) => _localUniqueSession,
@@ -370,10 +377,11 @@ class _EmailIdpEndpoint {
     required String verificationCode,
   }) async {
     return _i1.callAwaitableFunctionAndHandleExceptions(() async {
-      var _localUniqueSession = (sessionBuilder as _i1.InternalTestSessionBuilder).internalBuild(
-        endpoint: 'emailIdp',
-        method: 'verifyPasswordResetCode',
-      );
+      var _localUniqueSession =
+          (sessionBuilder as _i1.InternalTestSessionBuilder).internalBuild(
+            endpoint: 'emailIdp',
+            method: 'verifyPasswordResetCode',
+          );
       try {
         var _localCallContext = await _endpointDispatch.getMethodCallContext(
           createSessionCallback: (_) => _localUniqueSession,
@@ -404,10 +412,11 @@ class _EmailIdpEndpoint {
     required String newPassword,
   }) async {
     return _i1.callAwaitableFunctionAndHandleExceptions(() async {
-      var _localUniqueSession = (sessionBuilder as _i1.InternalTestSessionBuilder).internalBuild(
-        endpoint: 'emailIdp',
-        method: 'finishPasswordReset',
-      );
+      var _localUniqueSession =
+          (sessionBuilder as _i1.InternalTestSessionBuilder).internalBuild(
+            endpoint: 'emailIdp',
+            method: 'finishPasswordReset',
+          );
       try {
         var _localCallContext = await _endpointDispatch.getMethodCallContext(
           createSessionCallback: (_) => _localUniqueSession,
@@ -434,10 +443,11 @@ class _EmailIdpEndpoint {
 
   _i3.Future<bool> hasAccount(_i1.TestSessionBuilder sessionBuilder) async {
     return _i1.callAwaitableFunctionAndHandleExceptions(() async {
-      var _localUniqueSession = (sessionBuilder as _i1.InternalTestSessionBuilder).internalBuild(
-        endpoint: 'emailIdp',
-        method: 'hasAccount',
-      );
+      var _localUniqueSession =
+          (sessionBuilder as _i1.InternalTestSessionBuilder).internalBuild(
+            endpoint: 'emailIdp',
+            method: 'hasAccount',
+          );
       try {
         var _localCallContext = await _endpointDispatch.getMethodCallContext(
           createSessionCallback: (_) => _localUniqueSession,
@@ -475,10 +485,11 @@ class _JwtRefreshEndpoint {
     required String refreshToken,
   }) async {
     return _i1.callAwaitableFunctionAndHandleExceptions(() async {
-      var _localUniqueSession = (sessionBuilder as _i1.InternalTestSessionBuilder).internalBuild(
-        endpoint: 'jwtRefresh',
-        method: 'refreshAccessToken',
-      );
+      var _localUniqueSession =
+          (sessionBuilder as _i1.InternalTestSessionBuilder).internalBuild(
+            endpoint: 'jwtRefresh',
+            method: 'refreshAccessToken',
+          );
       try {
         var _localCallContext = await _endpointDispatch.getMethodCallContext(
           createSessionCallback: (_) => _localUniqueSession,
@@ -517,10 +528,11 @@ class _DrawEndpoint {
     int count,
   ) async {
     return _i1.callAwaitableFunctionAndHandleExceptions(() async {
-      var _localUniqueSession = (sessionBuilder as _i1.InternalTestSessionBuilder).internalBuild(
-        endpoint: 'draw',
-        method: 'draw',
-      );
+      var _localUniqueSession =
+          (sessionBuilder as _i1.InternalTestSessionBuilder).internalBuild(
+            endpoint: 'draw',
+            method: 'draw',
+          );
       try {
         var _localCallContext = await _endpointDispatch.getMethodCallContext(
           createSessionCallback: (_) => _localUniqueSession,
@@ -552,10 +564,11 @@ class _DrawEndpoint {
     String? note,
   ) async {
     return _i1.callAwaitableFunctionAndHandleExceptions(() async {
-      var _localUniqueSession = (sessionBuilder as _i1.InternalTestSessionBuilder).internalBuild(
-        endpoint: 'draw',
-        method: 'setStatus',
-      );
+      var _localUniqueSession =
+          (sessionBuilder as _i1.InternalTestSessionBuilder).internalBuild(
+            endpoint: 'draw',
+            method: 'setStatus',
+          );
       try {
         var _localCallContext = await _endpointDispatch.getMethodCallContext(
           createSessionCallback: (_) => _localUniqueSession,
@@ -586,10 +599,11 @@ class _DrawEndpoint {
     int eventId,
   ) async {
     return _i1.callAwaitableFunctionAndHandleExceptions(() async {
-      var _localUniqueSession = (sessionBuilder as _i1.InternalTestSessionBuilder).internalBuild(
-        endpoint: 'draw',
-        method: 'winners',
-      );
+      var _localUniqueSession =
+          (sessionBuilder as _i1.InternalTestSessionBuilder).internalBuild(
+            endpoint: 'draw',
+            method: 'winners',
+          );
       try {
         var _localCallContext = await _endpointDispatch.getMethodCallContext(
           createSessionCallback: (_) => _localUniqueSession,
@@ -630,10 +644,11 @@ class _EventEndpoint {
     bool allowMultipleWins,
   ) async {
     return _i1.callAwaitableFunctionAndHandleExceptions(() async {
-      var _localUniqueSession = (sessionBuilder as _i1.InternalTestSessionBuilder).internalBuild(
-        endpoint: 'event',
-        method: 'create',
-      );
+      var _localUniqueSession =
+          (sessionBuilder as _i1.InternalTestSessionBuilder).internalBuild(
+            endpoint: 'event',
+            method: 'create',
+          );
       try {
         var _localCallContext = await _endpointDispatch.getMethodCallContext(
           createSessionCallback: (_) => _localUniqueSession,
@@ -665,10 +680,11 @@ class _EventEndpoint {
     int organizationId,
   ) async {
     return _i1.callAwaitableFunctionAndHandleExceptions(() async {
-      var _localUniqueSession = (sessionBuilder as _i1.InternalTestSessionBuilder).internalBuild(
-        endpoint: 'event',
-        method: 'list',
-      );
+      var _localUniqueSession =
+          (sessionBuilder as _i1.InternalTestSessionBuilder).internalBuild(
+            endpoint: 'event',
+            method: 'list',
+          );
       try {
         var _localCallContext = await _endpointDispatch.getMethodCallContext(
           createSessionCallback: (_) => _localUniqueSession,
@@ -706,10 +722,11 @@ class _OrganizationEndpoint {
     String name,
   ) async {
     return _i1.callAwaitableFunctionAndHandleExceptions(() async {
-      var _localUniqueSession = (sessionBuilder as _i1.InternalTestSessionBuilder).internalBuild(
-        endpoint: 'organization',
-        method: 'create',
-      );
+      var _localUniqueSession =
+          (sessionBuilder as _i1.InternalTestSessionBuilder).internalBuild(
+            endpoint: 'organization',
+            method: 'create',
+          );
       try {
         var _localCallContext = await _endpointDispatch.getMethodCallContext(
           createSessionCallback: (_) => _localUniqueSession,
@@ -735,10 +752,11 @@ class _OrganizationEndpoint {
     _i1.TestSessionBuilder sessionBuilder,
   ) async {
     return _i1.callAwaitableFunctionAndHandleExceptions(() async {
-      var _localUniqueSession = (sessionBuilder as _i1.InternalTestSessionBuilder).internalBuild(
-        endpoint: 'organization',
-        method: 'mine',
-      );
+      var _localUniqueSession =
+          (sessionBuilder as _i1.InternalTestSessionBuilder).internalBuild(
+            endpoint: 'organization',
+            method: 'mine',
+          );
       try {
         var _localCallContext = await _endpointDispatch.getMethodCallContext(
           createSessionCallback: (_) => _localUniqueSession,
@@ -769,10 +787,11 @@ class _OrganizationEndpoint {
     _i11.ByteData? logo,
   ) async {
     return _i1.callAwaitableFunctionAndHandleExceptions(() async {
-      var _localUniqueSession = (sessionBuilder as _i1.InternalTestSessionBuilder).internalBuild(
-        endpoint: 'organization',
-        method: 'updateBranding',
-      );
+      var _localUniqueSession =
+          (sessionBuilder as _i1.InternalTestSessionBuilder).internalBuild(
+            endpoint: 'organization',
+            method: 'updateBranding',
+          );
       try {
         var _localCallContext = await _endpointDispatch.getMethodCallContext(
           createSessionCallback: (_) => _localUniqueSession,
@@ -816,10 +835,11 @@ class _ParticipantEndpoint {
     int eventId,
   ) async {
     return _i1.callAwaitableFunctionAndHandleExceptions(() async {
-      var _localUniqueSession = (sessionBuilder as _i1.InternalTestSessionBuilder).internalBuild(
-        endpoint: 'participant',
-        method: 'list',
-      );
+      var _localUniqueSession =
+          (sessionBuilder as _i1.InternalTestSessionBuilder).internalBuild(
+            endpoint: 'participant',
+            method: 'list',
+          );
       try {
         var _localCallContext = await _endpointDispatch.getMethodCallContext(
           createSessionCallback: (_) => _localUniqueSession,
@@ -848,10 +868,11 @@ class _ParticipantEndpoint {
     bool replaceAll,
   ) async {
     return _i1.callAwaitableFunctionAndHandleExceptions(() async {
-      var _localUniqueSession = (sessionBuilder as _i1.InternalTestSessionBuilder).internalBuild(
-        endpoint: 'participant',
-        method: 'importRows',
-      );
+      var _localUniqueSession =
+          (sessionBuilder as _i1.InternalTestSessionBuilder).internalBuild(
+            endpoint: 'participant',
+            method: 'importRows',
+          );
       try {
         var _localCallContext = await _endpointDispatch.getMethodCallContext(
           createSessionCallback: (_) => _localUniqueSession,
@@ -893,10 +914,11 @@ class _PrizeEndpoint {
     int eventId,
   ) async {
     return _i1.callAwaitableFunctionAndHandleExceptions(() async {
-      var _localUniqueSession = (sessionBuilder as _i1.InternalTestSessionBuilder).internalBuild(
-        endpoint: 'prize',
-        method: 'list',
-      );
+      var _localUniqueSession =
+          (sessionBuilder as _i1.InternalTestSessionBuilder).internalBuild(
+            endpoint: 'prize',
+            method: 'list',
+          );
       try {
         var _localCallContext = await _endpointDispatch.getMethodCallContext(
           createSessionCallback: (_) => _localUniqueSession,
@@ -923,10 +945,11 @@ class _PrizeEndpoint {
     _i15.EventPrize prize,
   ) async {
     return _i1.callAwaitableFunctionAndHandleExceptions(() async {
-      var _localUniqueSession = (sessionBuilder as _i1.InternalTestSessionBuilder).internalBuild(
-        endpoint: 'prize',
-        method: 'save',
-      );
+      var _localUniqueSession =
+          (sessionBuilder as _i1.InternalTestSessionBuilder).internalBuild(
+            endpoint: 'prize',
+            method: 'save',
+          );
       try {
         var _localCallContext = await _endpointDispatch.getMethodCallContext(
           createSessionCallback: (_) => _localUniqueSession,
@@ -953,10 +976,11 @@ class _PrizeEndpoint {
     int prizeId,
   ) async {
     return _i1.callAwaitableFunctionAndHandleExceptions(() async {
-      var _localUniqueSession = (sessionBuilder as _i1.InternalTestSessionBuilder).internalBuild(
-        endpoint: 'prize',
-        method: 'delete',
-      );
+      var _localUniqueSession =
+          (sessionBuilder as _i1.InternalTestSessionBuilder).internalBuild(
+            endpoint: 'prize',
+            method: 'delete',
+          );
       try {
         var _localCallContext = await _endpointDispatch.getMethodCallContext(
           createSessionCallback: (_) => _localUniqueSession,

@@ -1,45 +1,22 @@
-# Miscellaneous
-*.class
-*.log
-*.pyc
-*.swp
-.DS_Store
-.atom/
-.build/
-.buildlog/
-.history
-.svn/
-.swiftpm/
-migrate_working_dir/
+# Berlaku untuk semua paket. Aturan khusus Flutter ada di undian_flutter/.gitignore,
+# aturan khusus server di undian_server/.gitignore.
 
-# IntelliJ related
-*.iml
-*.ipr
-*.iws
-.idea/
-
-# The .vscode folder contains launch configuration and tasks you configure in
-# VS Code which you may wish to be included in version control, so this line
-# is commented out by default.
-#.vscode/
-
-# Flutter/Dart/Pub related
-**/doc/api/
-**/ios/Flutter/.last_build_id
+# Dart / Flutter
 .dart_tool/
 .flutter-plugins-dependencies
-.pub-cache/
-.pub/
-/build/
-/coverage/
+build/
 
-# Symbolication related
-app.*.symbols
+# IDE
+.idea/
+*.iml
 
-# Obfuscation related
-app.*.map.json
+# Rahasia dan data di VPS
+.env
+deploy/backups/
+deploy/certbot/
+**/config/passwords.yaml
 
-# Android Studio will place build artifacts here
-/android/app/debug
-/android/app/profile
-/android/app/release
+# Data contoh/asli dari Excel tidak boleh masuk repo publik (kecuali template kosong)
+*.xls
+*.xlsx
+!undian_flutter/assets/templates/*.xlsx

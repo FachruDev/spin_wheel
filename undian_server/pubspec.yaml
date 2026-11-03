@@ -5,11 +5,13 @@ publish_to: none
 environment:
   sdk: '^3.8.0'
 
+resolution: workspace
+
 dependencies:
   serverpod: 3.4.13
   serverpod_auth_idp_server: 3.4.13
   undian_core:
-    path: ../packages/undian_core
+    path: ../undian_core
 
 dev_dependencies:
   lints: '>=3.0.0 <7.0.0'
@@ -21,15 +23,15 @@ serverpod:
     # Starts the server and applies migrations
     start: dart bin/main.dart --apply-migrations
 
-    # Build the Flutter web app (repo root) and copy it to the server's web directory.
+    # Build the Flutter web app and copy it to the server's web directory.
     # Windows uses xcopy since flutter's --output flag doesn't work there.
     # See: https://github.com/flutter/flutter/issues/157886
     flutter_build:
       windows: >-
         (if exist web\app rmdir /S /Q web\app)
-        & cd /D ..
+        & cd /D ..\undian_flutter
         && flutter build web --base-href /app/
-        && xcopy /E /I /Y build\web undian_server\web\app
+        && xcopy /E /I /Y build\web ..\undian_server\web\app
       posix: |
-        cd ..
-        flutter build web --base-href /app/ --output undian_server/web/app
+        cd ../undian_flutter
+        flutter build web --base-href /app/ --output ../undian_server/web/app

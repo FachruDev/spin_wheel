@@ -2,7 +2,7 @@ import 'dart:math';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:spin_wheel/features/stage/stage_controller.dart';
+import 'package:undian_flutter/features/stage/stage_controller.dart';
 import 'package:undian_core/undian_core.dart';
 
 void main() {

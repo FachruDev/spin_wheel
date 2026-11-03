@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:spin_wheel/app/app.dart';
-import 'package:spin_wheel/app/fonts.dart';
-import 'package:spin_wheel/features/stage/stage_controller.dart';
+import 'package:undian_flutter/app/app.dart';
+import 'package:undian_flutter/app/fonts.dart';
+import 'package:undian_flutter/features/stage/stage_controller.dart';
 
 void main() {
   setUp(() => AppFonts.useGoogleFonts = false);

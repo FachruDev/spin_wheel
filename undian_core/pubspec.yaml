@@ -1,0 +1,13 @@
+name: undian_core
+description: Logika inti pengundian (kelayakan peserta, stok hadiah, undian berbobot poin). Dipakai server dan aplikasi.
+version: 0.1.0
+publish_to: none
+
+environment:
+  sdk: ^3.8.0
+
+resolution: workspace
+
+dev_dependencies:
+  lints: ^6.1.0
+  test: ^1.25.5

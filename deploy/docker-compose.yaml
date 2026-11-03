@@ -1,0 +1,76 @@
+# Deploy produksi di VPS Linux. Jalankan dari folder deploy/:
+#   cp .env.example .env   # lalu isi semua nilainya
+#   docker compose up -d --build
+# Langkah lengkap (termasuk sertifikat HTTPS pertama kali) ada di deploy/README.md.
+name: undian
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_DB: undian
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?isi DB_PASSWORD di deploy/.env}
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d undian"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    # Sengaja tanpa "ports": database tidak bisa diakses dari internet.
+
+  server:
+    build:
+      context: ..
+      dockerfile: undian_server/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      SERVERPOD_APPLY_MIGRATIONS: "true"
+      SERVERPOD_DATABASE_PASSWORD: ${DB_PASSWORD}
+      SERVERPOD_API_SERVER_PUBLIC_HOST: ${API_DOMAIN:?isi API_DOMAIN di deploy/.env}
+      SERVERPOD_INSIGHTS_SERVER_PUBLIC_HOST: ${API_DOMAIN}
+      SERVERPOD_WEB_SERVER_PUBLIC_HOST: ${APP_DOMAIN:?isi APP_DOMAIN di deploy/.env}
+      SERVERPOD_SERVICE_SECRET: ${SERVICE_SECRET:?isi SERVICE_SECRET di deploy/.env}
+      SERVERPOD_PASSWORD_emailSecretHashPepper: ${EMAIL_SECRET_HASH_PEPPER:?isi EMAIL_SECRET_HASH_PEPPER}
+      SERVERPOD_PASSWORD_jwtRefreshTokenHashPepper: ${JWT_REFRESH_TOKEN_HASH_PEPPER:?isi JWT_REFRESH_TOKEN_HASH_PEPPER}
+      SERVERPOD_PASSWORD_jwtHmacSha512PrivateKey: ${JWT_HMAC_SHA512_PRIVATE_KEY:?isi JWT_HMAC_SHA512_PRIVATE_KEY}
+    expose:
+      - "8080"
+
+  web:
+    build:
+      context: ..
+      dockerfile: deploy/web.Dockerfile
+      args:
+        SERVER_URL: https://${API_DOMAIN}/
+    restart: unless-stopped
+    depends_on:
+      - server
+    environment:
+      APP_DOMAIN: ${APP_DOMAIN}
+      API_DOMAIN: ${API_DOMAIN}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./certbot/conf:/etc/letsencrypt:ro
+      - ./certbot/www:/var/www/certbot:ro
+
+  # Memperpanjang sertifikat Let's Encrypt otomatis (dicek tiap 12 jam).
+  certbot:
+    image: certbot/certbot:v3.1.0
+    restart: unless-stopped
+    volumes:
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
+    entrypoint: >-
+      /bin/sh -c 'trap exit TERM;
+      while :; do certbot renew --webroot -w /var/www/certbot --quiet; sleep 12h & wait $${!}; done'
+
+volumes:
+  db_data:

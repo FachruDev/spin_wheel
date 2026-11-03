@@ -1,0 +1,5 @@
+# Header keamanan. Di nginx, add_header di dalam location menggantikan semua add_header
+# dari level server, jadi file ini di-include ulang di location yang punya add_header sendiri.
+add_header Strict-Transport-Security "max-age=31536000" always;
+add_header X-Content-Type-Options "nosniff" always;
+add_header Referrer-Policy "strict-origin-when-cross-origin" always;

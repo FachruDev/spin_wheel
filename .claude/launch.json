@@ -4,7 +4,7 @@
     {
       "name": "undian-web",
       "runtimeExecutable": "python",
-      "runtimeArgs": ["-m", "http.server", "8765", "--directory", "build/web"],
+      "runtimeArgs": ["-m", "http.server", "8765", "--directory", "undian_flutter/build/web"],
       "port": 8765
     }
   ]
