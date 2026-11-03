@@ -1,0 +1,13 @@
+### Satu baris peserta dari file Excel yang sudah dipetakan kolomnya di aplikasi.
+class: ParticipantInput
+fields:
+  nik: String
+  name: String
+  area: String
+  department: String
+  employmentStatus: String
+  phone: String?
+
+  ### Kosong di Excel dianggap 1.
+  points: int
+  groups: List<String>

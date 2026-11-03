@@ -1,0 +1,24 @@
+### Hasil undian: satu peserta memenangkan satu unit hadiah.
+class: PrizeWinner
+table: winner
+fields:
+  eventId: int, relation(parent=draw_event, onDelete=Cascade)
+  prizeId: int, relation(parent=prize, onDelete=Cascade)
+  participantId: int, relation(parent=participant, onDelete=Cascade)
+
+  ### Nomor putaran undian dalam acara (1, 2, 3, ...).
+  roundNo: int
+  status: WinnerStatus
+  drawnAt: DateTime
+
+  ### Operator yang menjalankan undian.
+  drawnBy: UuidValue
+
+  ### Alasan perubahan status, mis. "Tidak hadir saat dipanggil".
+  note: String?
+indexes:
+  winner_event_idx:
+    fields: eventId
+  winner_prize_participant_idx:
+    fields: prizeId, participantId
+    unique: true

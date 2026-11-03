@@ -1,0 +1,14 @@
+### Satu acara undian, mis. "HUT 2026" atau "RAT Koperasi 2026".
+class: DrawEvent
+table: draw_event
+fields:
+  organizationId: int, relation(parent=organization, onDelete=Cascade)
+  name: String
+  eventDate: DateTime?
+
+  ### Jika true, pemenang hadiah lain boleh ikut undian hadiah berikutnya.
+  allowMultipleWins: bool
+  createdAt: DateTime
+indexes:
+  draw_event_org_idx:
+    fields: organizationId

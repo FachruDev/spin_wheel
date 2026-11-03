@@ -1,0 +1,11 @@
+enum: WinnerStatus
+serialized: byName
+values:
+  ### Baru terundi, menunggu penyerahan.
+  - sah
+  ### Hadiah sudah diserahkan langsung.
+  - diserahkan
+  ### Hadiah dikirim/ditransfer (mis. peserta daerah yang tidak hadir).
+  - ditransfer
+  ### Pemenang tidak hadir/batal; unit hadiah kembali ke stok.
+  - hangus

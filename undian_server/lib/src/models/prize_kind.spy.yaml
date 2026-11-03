@@ -1,0 +1,5 @@
+enum: PrizeKind
+serialized: byName
+values:
+  - doorprize
+  - grandprize

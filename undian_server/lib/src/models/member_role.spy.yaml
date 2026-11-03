@@ -1,0 +1,10 @@
+### Peran pengguna dalam satu organisasi.
+enum: MemberRole
+serialized: byName
+values:
+  ### Mengatur organisasi, anggota, acara, peserta, dan hadiah.
+  - admin
+  ### Operator: menjalankan undian dan mengubah status pemenang.
+  - drawOperator
+  ### Hanya melihat.
+  - viewer

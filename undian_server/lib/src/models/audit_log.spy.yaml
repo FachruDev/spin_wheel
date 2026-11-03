@@ -1,0 +1,15 @@
+### Catatan setiap aksi penting (undi, ubah status, import) untuk pertanggungjawaban.
+class: AuditLog
+table: audit_log
+fields:
+  organizationId: int, relation(parent=organization, onDelete=Cascade)
+  eventId: int?
+  authUserId: UuidValue
+
+  ### Kode aksi, mis. "draw", "winner.forfeit", "participant.import".
+  action: String
+  detail: String
+  createdAt: DateTime
+indexes:
+  audit_log_org_idx:
+    fields: organizationId, createdAt

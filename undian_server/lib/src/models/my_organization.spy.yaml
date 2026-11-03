@@ -1,0 +1,5 @@
+### Organisasi milik pengguna yang sedang login, beserta perannya.
+class: MyOrganization
+fields:
+  organization: Organization
+  role: MemberRole

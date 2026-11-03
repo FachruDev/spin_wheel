@@ -1,0 +1,23 @@
+### Peserta undian dalam satu acara.
+class: EventParticipant
+table: participant
+fields:
+  eventId: int, relation(parent=draw_event, onDelete=Cascade)
+
+  ### Nomor induk karyawan, sekaligus nomor undian. Unik per acara.
+  nik: String
+  name: String
+  area: String
+  department: String
+  employmentStatus: String
+  phone: String?
+
+  ### Bobot peluang: poin N = N tiket undian.
+  points: int
+
+  ### Grup yang diikuti, mis. ["Doorprize Bogor", "Grandprize Bogor"].
+  groups: List<String>
+indexes:
+  participant_event_nik_idx:
+    fields: eventId, nik
+    unique: true

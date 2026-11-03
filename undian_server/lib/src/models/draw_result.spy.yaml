@@ -1,0 +1,15 @@
+### Hasil satu putaran undian, dikirim ke operator dan layar panggung.
+class: DrawResult
+fields:
+  roundNo: int
+  prize: EventPrize
+
+  ### Pemenang berurutan; indeksnya sama dengan [winnerRecords].
+  winners: List<EventParticipant>
+  winnerRecords: List<PrizeWinner>
+
+  ### Jumlah peserta berhak saat undian.
+  poolSize: int
+
+  ### Contoh nama peserta berhak (maks. 200) untuk animasi kocok/drum.
+  poolSample: List<EventParticipant>

@@ -1,0 +1,22 @@
+### Hadiah dalam satu acara.
+class: EventPrize
+table: prize
+fields:
+  eventId: int, relation(parent=draw_event, onDelete=Cascade)
+  name: String
+  kind: PrizeKind
+
+  ### Jumlah unit hadiah.
+  quantity: int
+
+  ### Urutan tampil di rundown acara.
+  sortOrder: int
+
+  ### Peserta berhak jika menjadi anggota salah satu grup ini (dicocokkan persis).
+  eligibleGroups: List<String>
+
+  ### Jika true, semua peserta berhak. Daftar grup kosong tanpa ini berarti tidak ada yang berhak.
+  openToAll: bool
+indexes:
+  prize_event_idx:
+    fields: eventId

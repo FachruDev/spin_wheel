@@ -1,0 +1,14 @@
+### Organisasi/perusahaan pemakai aplikasi (tenant). Semua data lain berada di bawahnya.
+class: Organization
+table: organization
+fields:
+  name: String
+
+  ### Warna tema dalam ARGB, mis. 0xFF4F46E5.
+  primaryColor: int
+  accentColor: int
+
+  ### Logo kecil (PNG/JPG, maks. 300 KB).
+  logo: ByteData?
+
+  createdAt: DateTime

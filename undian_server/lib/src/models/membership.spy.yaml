@@ -1,0 +1,16 @@
+### Keanggotaan pengguna (akun login) di sebuah organisasi.
+class: Membership
+table: membership
+fields:
+  organizationId: int, relation(parent=organization, onDelete=Cascade)
+
+  ### ID pengguna dari modul auth Serverpod.
+  authUserId: UuidValue
+  role: MemberRole
+  createdAt: DateTime
+indexes:
+  membership_org_user_idx:
+    fields: organizationId, authUserId
+    unique: true
+  membership_user_idx:
+    fields: authUserId

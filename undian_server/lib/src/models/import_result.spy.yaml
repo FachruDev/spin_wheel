@@ -1,0 +1,8 @@
+### Ringkasan hasil import peserta.
+class: ImportResult
+fields:
+  inserted: int
+  updated: int
+
+  ### Baris yang ditolak beserta alasannya, mis. "Baris 12: NIK kosong".
+  rejected: List<String>

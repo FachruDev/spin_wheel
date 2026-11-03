@@ -1,0 +1,29 @@
+emailIdp:
+  - login:
+  - startRegistration:
+  - verifyRegistrationCode:
+  - finishRegistration:
+  - startPasswordReset:
+  - verifyPasswordResetCode:
+  - finishPasswordReset:
+  - hasAccount:
+jwtRefresh:
+  - refreshAccessToken:
+draw:
+  - draw:
+  - setStatus:
+  - winners:
+event:
+  - create:
+  - list:
+organization:
+  - create:
+  - mine:
+  - updateBranding:
+participant:
+  - list:
+  - importRows:
+prize:
+  - list:
+  - save:
+  - delete:
