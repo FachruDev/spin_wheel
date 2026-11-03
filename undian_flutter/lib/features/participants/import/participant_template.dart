@@ -1,5 +1,7 @@
 import 'package:excel/excel.dart' as xl;
 
+import '../../../core/excel/excel_sheet.dart';
+
 /// Judul kolom template. Harus dikenali otomatis oleh guessMapping (dijaga oleh tes).
 const templateHeaders = [
   'NIK',
@@ -83,13 +85,14 @@ List<int> buildParticipantTemplate({int preformattedRows = 1000}) {
   final defaultName = book.getDefaultSheet()!;
   book.rename(defaultName, 'Peserta');
   final participants = book['Peserta'];
-  _writeTable(participants, const []);
-  final nikStyle = xl.CellStyle(numberFormat: xl.NumFormat.standard_49);
+  writeExcelHeader(participants, templateHeaders, _columnWidths);
   for (var row = 1; row <= preformattedRows; row++) {
-    participants.cell(xl.CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: row)).cellStyle = nikStyle;
+    participants.cell(xl.CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: row)).cellStyle = excelTextStyle;
   }
 
-  _writeTable(book['Contoh'], _examples);
+  final examples = book['Contoh'];
+  writeExcelHeader(examples, templateHeaders, _columnWidths);
+  writeExcelRows(examples, _examples, textColumns: const {0});
 
   final help = book['Petunjuk'];
   help.setColumnWidth(0, 120);
@@ -101,27 +104,4 @@ List<int> buildParticipantTemplate({int preformattedRows = 1000}) {
 
   book.setDefaultSheet('Peserta');
   return book.encode()!;
-}
-
-void _writeTable(xl.Sheet sheet, List<List<String>> rows) {
-  final headerStyle = xl.CellStyle(
-    bold: true,
-    fontColorHex: xl.ExcelColor.white,
-    backgroundColorHex: xl.ExcelColor.fromHexString('#4F46E5'),
-  );
-  final textStyle = xl.CellStyle(numberFormat: xl.NumFormat.standard_49);
-  for (var c = 0; c < templateHeaders.length; c++) {
-    sheet.setColumnWidth(c, _columnWidths[c]);
-    final header = sheet.cell(xl.CellIndex.indexByColumnRow(columnIndex: c, rowIndex: 0));
-    header.value = xl.TextCellValue(templateHeaders[c]);
-    header.cellStyle = headerStyle;
-  }
-  for (var r = 0; r < rows.length; r++) {
-    for (var c = 0; c < rows[r].length; c++) {
-      if (rows[r][c].isEmpty) continue;
-      final cell = sheet.cell(xl.CellIndex.indexByColumnRow(columnIndex: c, rowIndex: r + 1));
-      cell.value = xl.TextCellValue(rows[r][c]);
-      if (c == 0) cell.cellStyle = textStyle;
-    }
-  }
 }

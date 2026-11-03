@@ -63,7 +63,7 @@ class EventPage extends ConsumerWidget {
             children: [
               ParticipantsTab(eventId: eventId, canManage: member?.canManage ?? false),
               PrizesTab(event: event, canManage: member?.canManage ?? false),
-              WinnersTab(eventId: eventId, canDraw: member?.canDraw ?? false),
+              WinnersTab(event: event, organization: member?.organization, canDraw: member?.canDraw ?? false),
             ],
           ),
         ),

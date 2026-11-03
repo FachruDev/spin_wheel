@@ -172,6 +172,8 @@ void main() {
     await tester.tap(find.text('Pemenang'));
     await pumpUntil(tester, find.text('11 pemenang sah · 0 hangus'));
     await tester.pump(const Duration(seconds: 1)); // tunggu animasi geser tab selesai
+    expect(find.text('Export Excel'), findsOneWidget);
+    expect(find.text('Export PDF'), findsOneWidget);
     final winners = await client.draw.winners(eventId);
     final participants = {for (final p in await client.participant.list(eventId)) p.id: p};
     expect(winners, hasLength(11));

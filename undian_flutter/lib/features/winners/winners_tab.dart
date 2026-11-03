@@ -7,13 +7,21 @@ import '../../core/ui/async_view.dart';
 import '../../core/ui/dialogs.dart';
 import '../../core/ui/format.dart';
 import '../events/event_providers.dart';
+import 'export/export_actions.dart';
+import 'export/winner_report.dart';
 
-/// Daftar pemenang per putaran, dengan aksi ubah status (diserahkan, ditransfer, hangus).
+/// Daftar pemenang per putaran, dengan aksi ubah status (diserahkan, ditransfer, hangus)
+/// dan export ke Excel/PDF.
 class WinnersTab extends ConsumerWidget {
-  const WinnersTab({super.key, required this.eventId, required this.canDraw});
+  const WinnersTab({super.key, required this.event, required this.organization, required this.canDraw});
 
-  final int eventId;
+  final DrawEvent event;
+
+  /// Untuk kop dokumen export; null selama data organisasi belum termuat.
+  final Organization? organization;
   final bool canDraw;
+
+  int get eventId => event.id!;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -35,10 +43,24 @@ class WinnersTab extends ConsumerWidget {
         }
         final ordered = list.reversed.toList();
         final valid = list.where((w) => w.status != WinnerStatus.hangus).length;
+        final logo = organization?.logo;
+        WinnerReport report() => WinnerReport(
+          organizationName: organization?.name ?? '',
+          logo: logo?.buffer.asUint8List(logo.offsetInBytes, logo.lengthInBytes),
+          event: event,
+          prizes: prizes,
+          participants: participants,
+          winners: list,
+        );
         return ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            Text('$valid pemenang sah · ${list.length - valid} hangus'),
+            Row(
+              children: [
+                Expanded(child: Text('$valid pemenang sah · ${list.length - valid} hangus')),
+                WinnerExportButtons(report: report),
+              ],
+            ),
             const SizedBox(height: 12),
             Card(
               child: Column(
@@ -81,13 +103,6 @@ class WinnersTab extends ConsumerWidget {
     }
   }
 }
-
-String winnerStatusLabel(WinnerStatus status) => switch (status) {
-  WinnerStatus.sah => 'Belum diserahkan',
-  WinnerStatus.diserahkan => 'Diserahkan',
-  WinnerStatus.ditransfer => 'Ditransfer',
-  WinnerStatus.hangus => 'Hangus',
-};
 
 class _WinnerRow extends StatelessWidget {
   const _WinnerRow({required this.winner, required this.person, required this.prize, required this.onStatus});

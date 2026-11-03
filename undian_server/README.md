@@ -12,7 +12,10 @@ Butuh Docker Desktop yang sedang menyala.
     dart bin/main.dart --apply-migrations
 
 API berjalan di `http://localhost:8080`, halaman web di `http://localhost:8082`.
-Kode verifikasi daftar akun email tampil di log server (belum ada layanan email).
+Tanpa SMTP, kode verifikasi daftar akun/lupa password ditulis ke log server (hanya di mode
+pengembangan). Untuk mengirim email sungguhan, isi di `config/passwords.yaml` bagian `development`:
+`smtpHost`, `smtpPort` (bawaan 587), `smtpUsername`, `smtpPassword`, `smtpFrom`, `smtpFromName`.
+Di produksi nilainya datang dari `deploy/.env` (lihat `deploy/README.md`).
 
 ## Setelah mengubah model (`lib/src/models/*.spy.yaml`) atau endpoint
 
