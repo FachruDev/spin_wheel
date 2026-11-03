@@ -9,7 +9,7 @@ import '../generated/protocol.dart';
 /// Pengundian. Hasil selalu ditentukan di server dan dicatat sebelum dikirim ke layar.
 class DrawEndpoint extends Endpoint {
   static const _maxPerRound = 50;
-  static const _poolSampleSize = 200;
+  static const _poolSampleSize = 1000;
 
   @override
   bool get requireLogin => true;

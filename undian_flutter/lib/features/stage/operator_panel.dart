@@ -2,13 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:undian_core/undian_core.dart';
 
+import '../../core/ui/dialogs.dart';
 import '../branding/branding.dart';
 import '../branding/branding_dialog.dart';
 import 'stage_controller.dart';
+import 'stage_page.dart';
 import 'widgets/common.dart';
 
-/// Panel kendali operator di samping layar panggung (prototipe).
-/// Di versi penuh panel ini bisa dibuka di perangkat lain, terhubung lewat server.
+/// Panel kendali operator di samping layar panggung.
 class OperatorPanel extends ConsumerWidget {
   const OperatorPanel({super.key, required this.onClose});
 
@@ -17,7 +18,8 @@ class OperatorPanel extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(stageControllerProvider);
-    final accent = ref.watch(brandingProvider.select((b) => b.accent));
+    final accent = ref.watch(stageBrandingProvider).accent;
+    final isDemo = ref.watch(stageGatewayProvider).isDemo;
     final controller = ref.read(stageControllerProvider.notifier);
     final theme = Theme.of(context);
     final phase = state.phase;
@@ -116,7 +118,13 @@ class OperatorPanel extends ConsumerWidget {
                     winner: winner,
                     person: state.participantById[winner.participantId]!,
                     prize: state.prizeById(winner.prizeId),
-                    onForfeit: state.isAnimating ? null : () => controller.forfeit(winner),
+                    onForfeit: state.isLocked
+                        ? null
+                        : () async {
+                            final name = state.participantById[winner.participantId]!.name;
+                            final reason = await askForfeitReason(context, name);
+                            if (reason != null) await controller.forfeit(winner, reason);
+                          },
                   ),
               ],
             ),
@@ -135,9 +143,11 @@ class OperatorPanel extends ConsumerWidget {
                 SizedBox(
                   height: 56,
                   child: FilledButton.icon(
-                    onPressed: state.isAnimating ? null : controller.primaryAction,
+                    onPressed: state.isLocked ? null : controller.primaryAction,
                     icon: Icon(phase is StageIdle ? Icons.casino_rounded : Icons.skip_next_rounded),
                     label: Text(switch (phase) {
+                      _ when state.loading => 'Memuat…',
+                      _ when state.busy => 'Menghubungi server…',
                       StageIdle() => 'UNDI  (Spasi)',
                       StageShow(revealed: false) => 'Sedang mengundi…',
                       StageShow(revealed: true) => 'LANJUT  (Spasi)',
@@ -147,18 +157,30 @@ class OperatorPanel extends ConsumerWidget {
                 const SizedBox(height: 8),
                 Row(
                   children: [
+                    if (isDemo)
+                      Expanded(
+                        child: TextButton.icon(
+                          onPressed: () => showBrandingDialog(
+                            context,
+                            initial: ref.read(brandingProvider),
+                            onSave: (b) async => ref.read(brandingProvider.notifier).update(b),
+                          ),
+                          icon: const Icon(Icons.palette_outlined),
+                          label: const Text('Tampilan'),
+                        ),
+                      ),
                     Expanded(
                       child: TextButton.icon(
-                        onPressed: () => showBrandingDialog(context),
-                        icon: const Icon(Icons.palette_outlined),
-                        label: const Text('Tampilan'),
+                        onPressed: state.isLocked ? null : controller.reload,
+                        icon: const Icon(Icons.restart_alt_rounded),
+                        label: Text(isDemo ? 'Reset demo' : 'Muat ulang'),
                       ),
                     ),
                     Expanded(
                       child: TextButton.icon(
-                        onPressed: state.isAnimating ? null : controller.reset,
-                        icon: const Icon(Icons.restart_alt_rounded),
-                        label: const Text('Reset demo'),
+                        onPressed: state.isAnimating ? null : () => StagePage.exit(context),
+                        icon: const Icon(Icons.logout_rounded),
+                        label: const Text('Keluar'),
                       ),
                     ),
                   ],

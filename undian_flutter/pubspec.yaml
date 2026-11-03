@@ -42,6 +42,11 @@ dependencies:
   undian_core:
     path: ../undian_core
   file_picker: ^13.3.2
+  serverpod_flutter: 3.4.13
+  serverpod_auth_idp_flutter: 3.4.13
+  undian_client:
+    path: ../undian_client
+  excel: ^4.0.6
 
 dev_dependencies:
   flutter_test:
@@ -53,6 +58,8 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
+  integration_test:
+    sdk: flutter
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

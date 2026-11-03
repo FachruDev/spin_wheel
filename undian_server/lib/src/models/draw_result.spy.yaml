@@ -11,5 +11,5 @@ fields:
   ### Jumlah peserta berhak saat undian.
   poolSize: int
 
-  ### Contoh nama peserta berhak (maks. 200) untuk animasi kocok/drum.
+  ### Peserta berhak (maks. 1000, diacak) untuk animasi dan penghitung kandidat di mode Buka NIK.
   poolSample: List<EventParticipant>

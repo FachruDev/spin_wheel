@@ -68,7 +68,7 @@ abstract class DrawResult implements _i1.SerializableModel {
   /// Jumlah peserta berhak saat undian.
   int poolSize;
 
-  /// Contoh nama peserta berhak (maks. 200) untuk animasi kocok/drum.
+  /// Peserta berhak (maks. 1000, diacak) untuk animasi dan penghitung kandidat di mode Buka NIK.
   List<_i3.EventParticipant> poolSample;
 
   /// Returns a shallow copy of this [DrawResult]

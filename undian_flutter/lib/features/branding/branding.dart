@@ -6,9 +6,26 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 class BrandPalette {
   const BrandPalette(this.name, this.primary, this.accent);
 
+  /// Palet bawaan yang warnanya sama, atau palet "Kustom" bila tidak ada yang cocok.
+  factory BrandPalette.fromColors(Color primary, Color accent) {
+    for (final p in brandPalettes) {
+      if (p.primary.toARGB32() == primary.toARGB32() && p.accent.toARGB32() == accent.toARGB32()) return p;
+    }
+    return BrandPalette('Kustom', primary, accent);
+  }
+
   final String name;
   final Color primary;
   final Color accent;
+
+  @override
+  bool operator ==(Object other) =>
+      other is BrandPalette &&
+      other.primary.toARGB32() == primary.toARGB32() &&
+      other.accent.toARGB32() == accent.toARGB32();
+
+  @override
+  int get hashCode => Object.hash(primary.toARGB32(), accent.toARGB32());
 }
 
 const defaultPalette = BrandPalette('Malam Emas', Color(0xFF4F46E5), Color(0xFFF5C04E));
@@ -24,7 +41,8 @@ const brandPalettes = [
 /// Identitas organisasi yang tampil di aplikasi dan layar panggung.
 ///
 /// Aplikasi dipakai banyak perusahaan, jadi tidak ada nama atau logo yang ditulis mati.
-/// Di versi penuh, nilai ini disimpan per organisasi di server.
+/// Untuk organisasi di server nilainya berasal dari tabel organization; [brandingProvider]
+/// hanya dipakai mode demo.
 class Branding {
   const Branding({
     this.organizationName = 'Nama Perusahaan',

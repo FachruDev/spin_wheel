@@ -20,3 +20,6 @@ deploy/certbot/
 *.xls
 *.xlsx
 !undian_flutter/assets/templates/*.xlsx
+
+# Log lokal (server dev, crashpad, dll.)
+*.log
