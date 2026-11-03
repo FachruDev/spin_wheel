@@ -30,6 +30,17 @@ flutter run -d windows --dart-define=SERVER_URL=http://localhost:8080/
 
 Tanpa `SERVER_URL`, aplikasi memakai `http://localhost:8080/`. Mode demo (`/demo`) tidak butuh server.
 
+## Template Excel peserta
+
+`assets/templates/template_peserta.xlsx` berisi sheet Peserta (kosong, kolom NIK berformat Teks),
+Contoh, dan Petunjuk. Isinya dibuat dari `lib/features/participants/import/participant_template.dart`;
+setelah mengubah file itu, jalankan `dart run tool/generate_template.dart`.
+
+## Data demo di server lokal
+
+`dart run tool/seed_demo.dart <file-log-server>` membuat akun, organisasi, dan acara demo
+(430 peserta fiktif, 6 hadiah) di server pengembangan. Jangan dipakai ke server produksi.
+
 ## Tes
 
 ```bash

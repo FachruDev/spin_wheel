@@ -2,6 +2,7 @@ import 'package:excel/excel.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:undian_flutter/features/participants/import/column_mapping.dart';
 import 'package:undian_flutter/features/participants/import/excel_table_reader.dart';
+import 'package:undian_flutter/features/participants/import/participant_template.dart';
 
 /// Membuat file .xlsx di memori dengan baris-baris [rows] di sheet pertama.
 List<int> workbook(List<List<Object?>> rows) {
@@ -87,6 +88,33 @@ void main() {
   test('NIK dan Nama wajib dipetakan', () {
     expect(mappingProblem({0: ImportField.nik}), contains('Nama'));
     expect(mappingProblem({0: ImportField.nik, 1: ImportField.name}), isNull);
+  });
+
+  test('template: judul kolom dikenali otomatis, contoh terbaca, sheet Peserta masih kosong', () {
+    final sheets = readWorkbook(buildParticipantTemplate(preformattedRows: 20));
+    expect(sheets.map((s) => s.name), containsAllInOrder(['Peserta', 'Contoh', 'Petunjuk']));
+
+    final empty = sheets.firstWhere((s) => s.name == 'Peserta').table();
+    expect(guessMapping(empty), {
+      0: ImportField.nik,
+      1: ImportField.name,
+      2: ImportField.area,
+      3: ImportField.department,
+      4: ImportField.employmentStatus,
+      5: ImportField.phone,
+      6: ImportField.points,
+      7: ImportField.group,
+      8: ImportField.group,
+      9: ImportField.group,
+    });
+    expect(mapRows(empty, guessMapping(empty)), isEmpty);
+
+    final example = sheets.firstWhere((s) => s.name == 'Contoh').table();
+    final rows = mapRows(example, guessMapping(example));
+    expect(rows.every((r) => r.isValid), isTrue);
+    expect(rows.first.input!.nik, '03090234');
+    expect(rows[1].input!.points, 2);
+    expect(rows.last.input!.groups, ['Doorprize Bogor', 'Grandprize Bogor']);
   });
 
   test('huruf kolom Excel', () {

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:undian_flutter/app/fonts.dart';
+import 'package:undian_flutter/features/participants/import/import_dialog.dart';
 import 'package:undian_flutter/features/stage/stage_controller.dart';
 import 'package:undian_flutter/features/stage/stage_page.dart';
 import 'package:undian_flutter/features/stage/stage_routes.dart';
@@ -73,6 +74,16 @@ void main() {
     expect((phase as StageShow).mode, RevealMode.panggung);
 
     await tester.pump(const Duration(seconds: 14));
+  });
+
+  testWidgets('dialog import menawarkan pilih file dan unduh template', (tester) async {
+    await tester.pumpWidget(
+      const ProviderScope(
+        child: MaterialApp(home: Scaffold(body: ImportDialog(eventId: 1, hasWinners: false))),
+      ),
+    );
+    expect(find.text('Pilih file Excel'), findsOneWidget);
+    expect(find.text('Unduh template Excel'), findsOneWidget);
   });
 
   testWidgets('Esc keluar dari panggung', (tester) async {

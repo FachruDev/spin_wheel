@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -9,6 +11,7 @@ import '../../events/event_providers.dart';
 import 'column_mapping.dart';
 import 'excel_table_reader.dart';
 import 'import_mapping_view.dart';
+import 'participant_template.dart';
 
 /// Import peserta dari Excel: pilih file → cocokkan kolom → pratinjau → kirim ke server.
 Future<void> showImportDialog(BuildContext context, {required int eventId, required bool hasWinners}) =>
@@ -142,6 +145,23 @@ class _ImportDialogState extends ConsumerState<ImportDialog> {
     );
   }
 
+  /// Menyimpan template kosong (sheet Peserta, Contoh, Petunjuk) ke lokasi pilihan pengguna.
+  Future<void> _downloadTemplate() async {
+    try {
+      final saved = await FilePicker.saveFile(
+        dialogTitle: 'Simpan template Excel',
+        fileName: 'template_peserta.xlsx',
+        bytes: Uint8List.fromList(buildParticipantTemplate()),
+        mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      );
+      if (saved != null && mounted) {
+        showInfoSnack(context, 'Template tersimpan. Isi sheet "Peserta", lalu pilih file itu di sini.');
+      }
+    } catch (e) {
+      if (mounted) showErrorSnack(context, e);
+    }
+  }
+
   Widget _pickView() {
     final theme = Theme.of(context);
     return Center(
@@ -152,14 +172,27 @@ class _ImportDialogState extends ConsumerState<ImportDialog> {
           const SizedBox(height: 16),
           const Text(
             'Pakai file Excel apa saja (.xlsx), mis. data dari HRD. Urutan dan nama kolom bebas; '
-            'Anda tinggal mencocokkan kolomnya di langkah berikutnya.',
+            'Anda tinggal mencocokkan kolomnya di langkah berikutnya.\n'
+            'Belum punya data? Unduh template, isi sheet "Peserta", lalu pilih file itu.',
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 24),
-          FilledButton.icon(
-            onPressed: _working ? null : _pickFile,
-            icon: const Icon(Icons.upload_file_rounded),
-            label: const Text('Pilih file Excel'),
+          Wrap(
+            spacing: 12,
+            runSpacing: 12,
+            alignment: WrapAlignment.center,
+            children: [
+              FilledButton.icon(
+                onPressed: _working ? null : _pickFile,
+                icon: const Icon(Icons.upload_file_rounded),
+                label: const Text('Pilih file Excel'),
+              ),
+              OutlinedButton.icon(
+                onPressed: _working ? null : _downloadTemplate,
+                icon: const Icon(Icons.download_rounded),
+                label: const Text('Unduh template Excel'),
+              ),
+            ],
           ),
           if (_working) const Padding(padding: EdgeInsets.all(16), child: CircularProgressIndicator()),
           if (_error case final error?)
