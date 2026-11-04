@@ -1,14 +1,13 @@
 import 'dart:typed_data';
 
 import 'package:serverpod/serverpod.dart';
+import 'package:undian_core/undian_core.dart' as core;
 
 import '../access.dart';
 import '../generated/protocol.dart';
 
 /// Organisasi (tenant) milik pengguna: membuat, melihat, dan mengatur identitasnya.
 class OrganizationEndpoint extends Endpoint {
-  static const _maxLogoBytes = 300 * 1024;
-
   @override
   bool get requireLogin => true;
 
@@ -16,12 +15,17 @@ class OrganizationEndpoint extends Endpoint {
   Future<MyOrganization> create(Session session, String name) async {
     final userId = currentUserId(session);
     final trimmed = name.trim();
-    if (trimmed.isEmpty) throw UndianException(message: 'Nama organisasi wajib diisi.');
+    ensureValid(core.UndianRules.nameProblem(trimmed, 'organisasi'));
     return session.db.transaction((tx) async {
       final now = DateTime.now().toUtc();
       final organization = await Organization.db.insertRow(
         session,
-        Organization(name: trimmed, primaryColor: 0xFF4F46E5, accentColor: 0xFFF5C04E, createdAt: now),
+        Organization(
+          name: trimmed,
+          primaryColor: core.UndianRules.defaultPrimaryColor,
+          accentColor: core.UndianRules.defaultAccentColor,
+          createdAt: now,
+        ),
         transaction: tx,
       );
       await Membership.db.insertRow(
@@ -65,10 +69,8 @@ class OrganizationEndpoint extends Endpoint {
   ) async {
     await requireMembership(session, organizationId, roles: adminRole);
     final trimmed = name.trim();
-    if (trimmed.isEmpty) throw UndianException(message: 'Nama organisasi wajib diisi.');
-    if (logo != null && logo.lengthInBytes > _maxLogoBytes) {
-      throw UndianException(message: 'Ukuran logo maksimal 300 KB.');
-    }
+    ensureValid(core.UndianRules.nameProblem(trimmed, 'organisasi'));
+    ensureValid(core.UndianRules.logoProblem(logo?.lengthInBytes));
     final organization = await Organization.db.findById(session, organizationId);
     if (organization == null) throw notFound();
     final updated = await Organization.db.updateRow(

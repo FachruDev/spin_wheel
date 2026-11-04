@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:undian_client/undian_client.dart';
 
-import '../../../core/server/server_providers.dart';
+import '../../../core/data/repository_providers.dart';
 import '../../../core/ui/async_view.dart';
 import '../../events/event_providers.dart';
 import 'column_mapping.dart';
@@ -96,7 +96,9 @@ class _ImportDialogState extends ConsumerState<ImportDialog> {
     final valid = [for (final r in _rows) ?r.input];
     setState(() => _working = true);
     try {
-      final result = await ref.read(clientProvider).participant.importRows(widget.eventId, valid, _replaceAll);
+      final result = await ref
+          .read(repositoryProvider)
+          .importParticipants(widget.eventId, valid, replaceAll: _replaceAll);
       ref.invalidate(participantsProvider(widget.eventId));
       setState(() => _result = result);
     } catch (e) {

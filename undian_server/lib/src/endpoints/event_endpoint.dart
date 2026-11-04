@@ -1,4 +1,5 @@
 import 'package:serverpod/serverpod.dart';
+import 'package:undian_core/undian_core.dart' as core;
 
 import '../access.dart';
 import '../generated/protocol.dart';
@@ -17,7 +18,7 @@ class EventEndpoint extends Endpoint {
   ) async {
     await requireMembership(session, organizationId, roles: adminRole);
     final trimmed = name.trim();
-    if (trimmed.isEmpty) throw UndianException(message: 'Nama acara wajib diisi.');
+    ensureValid(core.UndianRules.nameProblem(trimmed, 'acara'));
     final event = await DrawEvent.db.insertRow(
       session,
       DrawEvent(

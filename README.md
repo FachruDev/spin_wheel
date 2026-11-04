@@ -2,7 +2,9 @@
 
 Aplikasi undian doorprize & grand prize untuk acara perusahaan. Bisa dipakai banyak
 organisasi (SaaS gratis): tiap organisasi mengatur nama, logo, warna, acara, peserta, dan
-hadiahnya sendiri. Berjalan di web dan desktop Windows.
+hadiahnya sendiri. Berjalan di web dan desktop Windows. Aplikasi Windows punya mode offline untuk
+saat server bermasalah: data acara dipindah antarlaptop sebagai satu file paket `.undian`
+(lihat [undian_flutter/README.md](undian_flutter/README.md#mode-offline-aplikasi-windows)).
 
 ## Struktur
 

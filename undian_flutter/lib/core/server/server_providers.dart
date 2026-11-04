@@ -7,11 +7,18 @@ import 'package:undian_client/undian_client.dart';
 const serverUrl = String.fromEnvironment('SERVER_URL', defaultValue: 'http://localhost:8080/');
 
 /// Membuat client dan memulihkan sesi login yang tersimpan di perangkat.
+///
+/// Aplikasi tetap terbuka walau server tidak bisa dihubungi (mis. untuk mode offline): sesi
+/// yang tersimpan dipakai apa adanya dan diperiksa lagi saat server bisa dihubungi.
 Future<Client> createClient() async {
   final client = Client(serverUrl)
     ..connectivityMonitor = FlutterConnectivityMonitor()
     ..authSessionManager = FlutterAuthSessionManager();
-  await client.auth.initialize();
+  try {
+    await client.auth.initialize();
+  } catch (_) {
+    // Server mati, jaringan putus, atau waktu habis.
+  }
   return client;
 }
 

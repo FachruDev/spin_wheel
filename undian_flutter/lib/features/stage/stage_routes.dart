@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:undian_client/undian_client.dart';
 
-import '../../core/server/server_providers.dart';
+import '../../core/data/repository_providers.dart';
 import '../../core/ui/async_view.dart';
 import '../branding/branding.dart';
 import '../events/event_providers.dart';
 import '../organizations/organization_providers.dart';
 import 'gateway/demo_gateway.dart';
-import 'gateway/server_gateway.dart';
+import 'gateway/event_gateway.dart';
 import 'stage_controller.dart';
 import 'stage_page.dart';
 
@@ -35,7 +35,8 @@ class _DemoStageRouteState extends State<DemoStageRoute> {
   }
 }
 
-/// Panggung untuk acara di server. Undian dijalankan dan dicatat oleh server.
+/// Panggung untuk acara sungguhan. Undian dijalankan dan dicatat oleh server, atau oleh
+/// penyimpanan di laptop pada mode offline.
 class EventStageRoute extends ConsumerWidget {
   const EventStageRoute({super.key, required this.organizationId, required this.eventId});
 
@@ -75,7 +76,7 @@ class _ServerStage extends ConsumerStatefulWidget {
 }
 
 class _ServerStageState extends ConsumerState<_ServerStage> {
-  late final _gateway = ServerStageGateway(ref.read(clientProvider), widget.event);
+  late final _gateway = EventStageGateway(ref.read(repositoryProvider), widget.event);
 
   @override
   Widget build(BuildContext context) {

@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 import 'package:serverpod_auth_idp_flutter/serverpod_auth_idp_flutter.dart';
 
 import '../../core/server/server_providers.dart';
+import '../../core/ui/async_view.dart';
+import '../offline/offline_providers.dart';
 
 /// Masuk, daftar akun, dan lupa password dengan email. Tampilan sendiri berbahasa Indonesia;
 /// alurnya memakai [EmailAuthController] dari modul auth Serverpod.
@@ -42,7 +44,7 @@ class _SignInPageState extends ConsumerState<SignInPage> {
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      Icon(Icons.casino_rounded, size: 48, color: theme.colorScheme.primary),
+                      Icon(Icons.card_giftcard_rounded, size: 48, color: theme.colorScheme.primary),
                       const SizedBox(height: 12),
                       Text(_title, textAlign: TextAlign.center, style: theme.textTheme.headlineSmall),
                       const SizedBox(height: 6),
@@ -65,6 +67,22 @@ class _SignInPageState extends ConsumerState<SignInPage> {
                       ),
                       const SizedBox(height: 8),
                       ..._links(),
+                      if (_screen == EmailFlowScreen.login && ref.watch(offlineFilesProvider) != null) ...[
+                        const Divider(height: 32),
+                        OutlinedButton.icon(
+                          key: const ValueKey('offline-mode'),
+                          onPressed: _auth.isLoading ? null : _enterOffline,
+                          icon: const Icon(Icons.cloud_off_rounded),
+                          label: const Text('Mode offline (tanpa server)'),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          'Data disimpan di laptop ini. Pakai saat server bermasalah, '
+                          'lalu impor paket acara dari laptop lain atau dari salinan otomatis.',
+                          textAlign: TextAlign.center,
+                          style: theme.textTheme.bodySmall,
+                        ),
+                      ],
                     ],
                   ),
                 ),
@@ -162,6 +180,14 @@ class _SignInPageState extends ConsumerState<SignInPage> {
         link('Kembali ke halaman masuk', () => _auth.navigateTo(EmailFlowScreen.login));
     }
     return widgets;
+  }
+
+  Future<void> _enterOffline() async {
+    try {
+      await enterOfflineMode(ref);
+    } catch (e) {
+      if (mounted) showErrorSnack(context, e);
+    }
   }
 
   Future<void> _submit() async {

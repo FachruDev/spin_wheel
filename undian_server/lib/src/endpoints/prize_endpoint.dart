@@ -1,4 +1,5 @@
 import 'package:serverpod/serverpod.dart';
+import 'package:undian_core/undian_core.dart' as core;
 
 import '../access.dart';
 import '../generated/protocol.dart';
@@ -16,15 +17,10 @@ class PrizeEndpoint extends Endpoint {
   /// Menambah hadiah baru (id kosong) atau memperbarui yang sudah ada.
   Future<EventPrize> save(Session session, EventPrize prize) async {
     final name = prize.name.trim();
-    if (name.isEmpty) throw UndianException(message: 'Nama hadiah wajib diisi.');
-    if (prize.quantity < 1) throw UndianException(message: 'Jumlah unit minimal 1.');
-    final groups = {
-      for (final g in prize.eligibleGroups)
-        if (g.trim().isNotEmpty) g.trim(),
-    }.toList()..sort();
-    if (!prize.openToAll && groups.isEmpty) {
-      throw UndianException(message: 'Pilih minimal satu grup peserta, atau buka hadiah untuk semua peserta.');
-    }
+    final groups = core.UndianRules.cleanGroups(prize.eligibleGroups);
+    ensureValid(
+      core.UndianRules.prizeProblem(name: name, quantity: prize.quantity, openToAll: prize.openToAll, groups: groups),
+    );
 
     return session.db.transaction((tx) async {
       final id = prize.id;
@@ -51,9 +47,7 @@ class PrizeEndpoint extends Endpoint {
         where: (t) => t.prizeId.equals(id) & t.status.notEquals(WinnerStatus.hangus),
         transaction: tx,
       );
-      if (prize.quantity < used) {
-        throw UndianException(message: 'Sudah $used unit terundi; jumlah unit tidak boleh kurang dari itu.');
-      }
+      ensureValid(core.UndianRules.prizeQuantityProblem(quantity: prize.quantity, used: used));
       final saved = await EventPrize.db.updateRow(session, cleaned, transaction: tx);
       await audit(
         session,
@@ -73,7 +67,7 @@ class PrizeEndpoint extends Endpoint {
     if (prize == null) throw notFound();
     final event = await requireEvent(session, prize.eventId, roles: adminRole);
     final drawn = await PrizeWinner.db.count(session, where: (t) => t.prizeId.equals(prizeId));
-    if (drawn > 0) throw UndianException(message: 'Hadiah yang sudah diundi tidak bisa dihapus.');
+    if (drawn > 0) throw UndianException(message: core.UndianRules.deleteDrawnPrizeMessage);
     await EventPrize.db.deleteRow(session, prize);
     await audit(
       session,

@@ -3,9 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:undian_client/undian_client.dart';
 
-import '../../core/server/server_providers.dart';
+import '../../core/data/repository_providers.dart';
 import '../../core/ui/async_view.dart';
+import '../../core/ui/dialogs.dart';
 import '../../core/ui/format.dart';
+import '../offline/offline_providers.dart';
+import '../offline/ui/offline_widgets.dart';
 import '../organizations/organization_providers.dart';
 import 'event_providers.dart';
 
@@ -20,10 +23,11 @@ class EventsPage extends ConsumerWidget {
     final organization = ref.watch(organizationProvider(organizationId));
     final events = ref.watch(eventsProvider(organizationId));
     final canManage = organization.value?.canManage ?? false;
+    final offline = ref.watch(activeOfflineRepositoryProvider);
     return Scaffold(
       appBar: AppBar(
         leading: BackButton(onPressed: () => context.go('/')),
-        title: Text(organization.value?.organization.name ?? 'Acara'),
+        title: TitleWithOfflineBadge(organization.value?.organization.name ?? 'Acara'),
       ),
       floatingActionButton: canManage
           ? FloatingActionButton.extended(
@@ -53,8 +57,20 @@ class EventsPage extends ConsumerWidget {
                         contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
                         leading: const Icon(Icons.celebration_rounded),
                         title: Text(event.name),
-                        subtitle: Text(_subtitle(event)),
-                        trailing: const Icon(Icons.chevron_right_rounded),
+                        subtitle: Text(
+                          [
+                            _subtitle(event),
+                            if (offline?.eventInfo(event.id!) case final info?) info.origin,
+                          ].join('\n'),
+                        ),
+                        isThreeLine: offline != null,
+                        trailing: offline == null
+                            ? const Icon(Icons.chevron_right_rounded)
+                            : IconButton(
+                                tooltip: 'Hapus dari laptop ini',
+                                icon: const Icon(Icons.delete_outline_rounded),
+                                onPressed: () => _deleteOffline(context, ref, event),
+                              ),
                         onTap: () => context.go('/o/$organizationId/a/${event.id}'),
                       ),
                     ),
@@ -73,14 +89,40 @@ class EventsPage extends ConsumerWidget {
     return parts.isEmpty ? 'Tanggal belum diatur' : parts.join(' · ');
   }
 
+  /// Mode offline: menghapus salinan acara dari laptop ini (data di server tidak tersentuh).
+  Future<void> _deleteOffline(BuildContext context, WidgetRef ref, DrawEvent event) async {
+    final repository = ref.read(activeOfflineRepositoryProvider);
+    if (repository == null) return;
+    final ok = await confirm(
+      context,
+      title: 'Hapus "${event.name}" dari laptop ini?',
+      message:
+          'Peserta, hadiah, dan pemenang acara ini di laptop ini ikut terhapus. Ekspor paketnya dulu bila '
+          'datanya masih dibutuhkan.',
+      confirmLabel: 'Hapus',
+      destructive: true,
+    );
+    if (!ok || !context.mounted) return;
+    try {
+      await repository.deleteEvent(event.id!);
+      ref.invalidate(eventsProvider(organizationId));
+    } catch (e) {
+      if (context.mounted) showErrorSnack(context, e);
+    }
+  }
+
   Future<void> _create(BuildContext context, WidgetRef ref) async {
     final input = await showDialog<_NewEvent>(context: context, builder: (_) => const _NewEventDialog());
     if (input == null || !context.mounted) return;
     try {
       final event = await ref
-          .read(clientProvider)
-          .event
-          .create(organizationId, input.name, input.date?.toUtc(), input.allowMultipleWins);
+          .read(repositoryProvider)
+          .createEvent(
+            organizationId,
+            name: input.name,
+            eventDate: input.date?.toUtc(),
+            allowMultipleWins: input.allowMultipleWins,
+          );
       ref.invalidate(eventsProvider(organizationId));
       if (context.mounted) context.go('/o/$organizationId/a/${event.id}');
     } catch (e) {

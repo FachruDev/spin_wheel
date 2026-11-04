@@ -1,13 +1,13 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:undian_client/undian_client.dart';
 
-import '../../core/server/server_providers.dart';
+import '../../core/data/repository_providers.dart';
 
 /// Penanda satu acara di dalam satu organisasi (dipakai sebagai argumen family).
 typedef EventRef = ({int organizationId, int eventId});
 
 final eventsProvider = FutureProvider.autoDispose.family<List<DrawEvent>, int>(
-  (ref, organizationId) => ref.watch(clientProvider).event.list(organizationId),
+  (ref, organizationId) => ref.watch(repositoryProvider).events(organizationId),
 );
 
 final eventProvider = FutureProvider.autoDispose.family<DrawEvent, EventRef>((ref, key) async {
@@ -19,15 +19,15 @@ final eventProvider = FutureProvider.autoDispose.family<DrawEvent, EventRef>((re
 });
 
 final participantsProvider = FutureProvider.autoDispose.family<List<EventParticipant>, int>(
-  (ref, eventId) => ref.watch(clientProvider).participant.list(eventId),
+  (ref, eventId) => ref.watch(repositoryProvider).participants(eventId),
 );
 
 final prizesProvider = FutureProvider.autoDispose.family<List<EventPrize>, int>(
-  (ref, eventId) => ref.watch(clientProvider).prize.list(eventId),
+  (ref, eventId) => ref.watch(repositoryProvider).prizes(eventId),
 );
 
 final winnersProvider = FutureProvider.autoDispose.family<List<PrizeWinner>, int>(
-  (ref, eventId) => ref.watch(clientProvider).draw.winners(eventId),
+  (ref, eventId) => ref.watch(repositoryProvider).winners(eventId),
 );
 
 /// Semua grup yang dipakai peserta beserta jumlah anggotanya, urut abjad.

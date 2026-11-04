@@ -1,5 +1,3 @@
-import 'dart:math';
-
 import 'package:serverpod/serverpod.dart';
 import 'package:undian_core/undian_core.dart' as core;
 
@@ -8,9 +6,6 @@ import '../generated/protocol.dart';
 
 /// Pengundian. Hasil selalu ditentukan di server dan dicatat sebelum dikirim ke layar.
 class DrawEndpoint extends Endpoint {
-  static const _maxPerRound = 50;
-  static const _poolSampleSize = 1000;
-
   @override
   bool get requireLogin => true;
 
@@ -20,9 +15,7 @@ class DrawEndpoint extends Endpoint {
   /// dan satu orang tidak bisa memenangkan dua hadiah yang diundi bersamaan.
   Future<DrawResult> draw(Session session, int prizeId, int count) async {
     final userId = currentUserId(session);
-    if (count < 1 || count > _maxPerRound) {
-      throw UndianException(message: 'Jumlah pemenang per putaran harus 1–$_maxPerRound.');
-    }
+    ensureValid(core.UndianRules.drawCountProblem(count));
     return session.db.transaction((tx) async {
       final prize = await EventPrize.db.findById(session, prizeId, transaction: tx);
       if (prize == null) throw notFound();
@@ -62,7 +55,7 @@ class DrawEndpoint extends Endpoint {
         throw UndianException(message: e.message);
       }
 
-      final roundNo = winners.fold(0, (highest, w) => max(highest, w.roundNo)) + 1;
+      final roundNo = core.UndianRules.nextRoundNo(winners.map((w) => w.roundNo));
       final now = DateTime.now().toUtc();
       final inserted = await PrizeWinner.db.insert(
         session,
@@ -94,7 +87,7 @@ class DrawEndpoint extends Endpoint {
         transaction: tx,
       );
 
-      final sample = (List.of(pool)..shuffle()).take(_poolSampleSize);
+      final sample = (List.of(pool)..shuffle()).take(core.UndianRules.poolSampleSize);
       return DrawResult(
         roundNo: roundNo,
         prize: prize,
@@ -110,9 +103,6 @@ class DrawEndpoint extends Endpoint {
   /// kembali ke stok dan bisa langsung diundi ulang.
   Future<PrizeWinner> setStatus(Session session, int winnerId, WinnerStatus status, String? note) async {
     final reason = note?.trim();
-    if (status == WinnerStatus.hangus && (reason == null || reason.isEmpty)) {
-      throw UndianException(message: 'Alasan wajib diisi untuk menandai hangus.');
-    }
     return session.db.transaction((tx) async {
       final winner = await PrizeWinner.db.findById(session, winnerId, transaction: tx);
       if (winner == null) throw notFound();
@@ -123,9 +113,13 @@ class DrawEndpoint extends Endpoint {
         transaction: tx,
         lockMode: LockMode.forUpdate,
       );
-      if (winner.status == WinnerStatus.hangus) {
-        throw UndianException(message: 'Pemenang yang sudah hangus tidak bisa diubah statusnya.');
-      }
+      ensureValid(
+        core.UndianRules.statusChangeProblem(
+          current: core.WinnerStatus.values.byName(winner.status.name),
+          next: core.WinnerStatus.values.byName(status.name),
+          note: reason,
+        ),
+      );
       final updated = await PrizeWinner.db.updateRow(
         session,
         winner.copyWith(status: status, note: reason),

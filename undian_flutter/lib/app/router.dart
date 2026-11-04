@@ -1,7 +1,9 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:serverpod_auth_idp_flutter/serverpod_auth_idp_flutter.dart';
 
+import '../core/data/repository_providers.dart';
 import '../core/server/server_providers.dart';
 import '../features/auth/sign_in_page.dart';
 import '../features/events/event_page.dart';
@@ -9,9 +11,10 @@ import '../features/events/events_page.dart';
 import '../features/organizations/organizations_page.dart';
 import '../features/stage/stage_routes.dart';
 
-/// Rute aplikasi. Semua halaman kecuali login dan demo butuh login.
+/// Rute aplikasi. Semua halaman kecuali login dan demo butuh login, kecuali di mode offline
+/// (data di laptop ini, tanpa server dan tanpa login).
 ///
-///   /masuk                      → login / daftar
+///   /masuk                      → login / daftar / masuk mode offline
 ///   /demo                       → panggung demo (tanpa server)
 ///   /                           → organisasi saya
 ///   /o/:org                     → acara dalam organisasi
@@ -19,13 +22,16 @@ import '../features/stage/stage_routes.dart';
 ///   /o/:org/a/:event/panggung   → layar panggung acara
 final routerProvider = Provider<GoRouter>((ref) {
   final auth = ref.watch(clientProvider).auth;
+  final offline = ValueNotifier(ref.read(offlineSessionProvider) != null);
+  ref.listen(offlineSessionProvider, (_, session) => offline.value = session != null);
   final router = GoRouter(
-    refreshListenable: auth.authInfoListenable,
+    refreshListenable: Listenable.merge([auth.authInfoListenable, offline]),
     redirect: (context, state) {
       final path = state.uri.path;
+      final signedIn = auth.isAuthenticated || offline.value;
       final public = path == '/masuk' || path == '/demo';
-      if (!auth.isAuthenticated && !public) return '/masuk';
-      if (auth.isAuthenticated && path == '/masuk') return '/';
+      if (!signedIn && !public) return '/masuk';
+      if (signedIn && path == '/masuk') return '/';
       return null;
     },
     routes: [
@@ -56,7 +62,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
     ],
   );
-  ref.onDispose(router.dispose);
+  ref.onDispose(() {
+    router.dispose();
+    offline.dispose();
+  });
   return router;
 });
 

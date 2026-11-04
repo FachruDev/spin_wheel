@@ -1,4 +1,5 @@
 import 'package:serverpod/serverpod.dart';
+import 'package:undian_core/undian_core.dart' as core;
 
 import '../access.dart';
 import '../generated/protocol.dart';
@@ -25,24 +26,9 @@ class ParticipantEndpoint extends Endpoint {
   ) async {
     final event = await requireEvent(session, eventId, roles: adminRole);
 
-    final rejected = <String>[];
-    final valid = <String, ParticipantInput>{};
-    for (var i = 0; i < rows.length; i++) {
-      final row = rows[i];
-      final line = 'Baris ${i + 1}';
-      final nik = row.nik.trim();
-      if (nik.isEmpty) {
-        rejected.add('$line: NIK kosong');
-      } else if (row.name.trim().isEmpty) {
-        rejected.add('$line ($nik): nama kosong');
-      } else if (row.points < 1) {
-        rejected.add('$line ($nik): poin harus minimal 1');
-      } else if (valid.containsKey(nik)) {
-        rejected.add('$line: NIK $nik muncul lebih dari sekali');
-      } else {
-        valid[nik] = row;
-      }
-    }
+    final plan = core.UndianRules.planImport([for (final r in rows) _toImportRow(r)]);
+    final valid = plan.valid;
+    final rejected = plan.rejected;
 
     return session.db.transaction((tx) async {
       final existing = await EventParticipant.db.find(
@@ -58,13 +44,7 @@ class ParticipantEndpoint extends Endpoint {
           where: (t) => t.eventId.equals(eventId),
           transaction: tx,
         );
-        if (winnerCount > 0) {
-          throw UndianException(
-            message:
-                'Acara ini sudah punya pemenang, jadi data peserta tidak bisa diganti total. '
-                'Gunakan mode tambah/perbarui.',
-          );
-        }
+        if (winnerCount > 0) throw UndianException(message: core.UndianRules.replaceAllWithWinnersMessage);
         final removed = {
           for (final p in existing)
             if (!valid.containsKey(p.nik)) p.id!,
@@ -77,10 +57,6 @@ class ParticipantEndpoint extends Endpoint {
       final toInsert = <EventParticipant>[];
       final toUpdate = <EventParticipant>[];
       for (final MapEntry(key: nik, value: row) in valid.entries) {
-        final groups = {
-          for (final g in row.groups)
-            if (g.trim().isNotEmpty) g.trim(),
-        }.toList()..sort();
         final old = byNik[nik];
         final participant =
             (old ??
@@ -95,13 +71,13 @@ class ParticipantEndpoint extends Endpoint {
                       groups: [],
                     ))
                 .copyWith(
-                  name: row.name.trim(),
-                  area: row.area.trim(),
-                  department: row.department.trim(),
-                  employmentStatus: row.employmentStatus.trim(),
-                  phone: row.phone?.trim(),
+                  name: row.name,
+                  area: row.area,
+                  department: row.department,
+                  employmentStatus: row.employmentStatus,
+                  phone: row.phone,
                   points: row.points,
-                  groups: groups,
+                  groups: row.groups,
                 );
         (old == null ? toInsert : toUpdate).add(participant);
       }
@@ -121,4 +97,15 @@ class ParticipantEndpoint extends Endpoint {
       return ImportResult(inserted: toInsert.length, updated: toUpdate.length, rejected: rejected);
     });
   }
+
+  static core.ImportRow _toImportRow(ParticipantInput r) => core.ImportRow(
+    nik: r.nik,
+    name: r.name,
+    area: r.area,
+    department: r.department,
+    employmentStatus: r.employmentStatus,
+    phone: r.phone,
+    points: r.points,
+    groups: r.groups,
+  );
 }

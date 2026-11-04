@@ -48,6 +48,8 @@ dependencies:
     path: ../undian_client
   excel: ^4.0.6
   pdf: ^3.12.0
+  path_provider: ^2.1.6
+  url_launcher: ^6.3.3
 
 dev_dependencies:
   flutter_test:

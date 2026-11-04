@@ -4,12 +4,12 @@ import 'dart:ui';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:undian_client/undian_client.dart';
 
-import '../../core/server/server_providers.dart';
+import '../../core/data/repository_providers.dart';
 import '../branding/branding.dart';
 
-/// Organisasi milik pengguna yang login, beserta perannya.
+/// Organisasi milik pengguna yang login (atau semua organisasi di mode offline), beserta perannya.
 final myOrganizationsProvider = FutureProvider.autoDispose<List<MyOrganization>>(
-  (ref) => ref.watch(clientProvider).organization.mine(),
+  (ref) => ref.watch(repositoryProvider).myOrganizations(),
 );
 
 /// Satu organisasi berdasarkan id, diambil dari [myOrganizationsProvider].
@@ -45,18 +45,17 @@ extension OrganizationBranding on Organization {
   }
 }
 
-/// Menyimpan identitas organisasi ke server lalu memuat ulang daftar organisasi.
+/// Menyimpan identitas organisasi lalu memuat ulang daftar organisasi.
 Future<void> saveOrganizationBranding(WidgetRef ref, int organizationId, Branding branding) async {
   final logo = branding.logoBytes;
   await ref
-      .read(clientProvider)
-      .organization
+      .read(repositoryProvider)
       .updateBranding(
         organizationId,
-        branding.organizationName,
-        branding.primary.toARGB32(),
-        branding.accent.toARGB32(),
-        logo == null ? null : ByteData.sublistView(Uint8List.fromList(logo)),
+        name: branding.organizationName,
+        primaryColor: branding.primary.toARGB32(),
+        accentColor: branding.accent.toARGB32(),
+        logo: logo == null ? null : ByteData.sublistView(Uint8List.fromList(logo)),
       );
   ref.invalidate(myOrganizationsProvider);
 }

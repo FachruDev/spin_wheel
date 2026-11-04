@@ -4,11 +4,14 @@ import 'package:go_router/go_router.dart';
 import 'package:serverpod_auth_idp_flutter/serverpod_auth_idp_flutter.dart';
 import 'package:undian_client/undian_client.dart';
 
+import '../../core/data/repository_providers.dart';
 import '../../core/server/server_providers.dart';
 import '../../core/ui/async_view.dart';
 import '../../core/ui/dialogs.dart';
 import '../branding/brand_widgets.dart';
 import '../branding/branding_dialog.dart';
+import '../offline/offline_providers.dart';
+import '../offline/ui/offline_widgets.dart';
 import 'organization_providers.dart';
 
 /// Beranda setelah login: organisasi tempat pengguna menjadi anggota.
@@ -18,20 +21,35 @@ class OrganizationsPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final organizations = ref.watch(myOrganizationsProvider);
+    final offline = ref.watch(isOfflineProvider);
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Organisasi Saya'),
+        title: const TitleWithOfflineBadge('Organisasi Saya'),
         actions: [
+          if (offline)
+            TextButton.icon(
+              key: const ValueKey('import-package-open'),
+              onPressed: () => importPackageAndOpen(context, ref),
+              icon: const Icon(Icons.file_download_rounded),
+              label: const Text('Impor paket acara'),
+            ),
           TextButton.icon(
             onPressed: () => context.push('/demo'),
             icon: const Icon(Icons.slideshow_rounded),
             label: const Text('Mode demo'),
           ),
-          IconButton(
-            tooltip: 'Keluar',
-            onPressed: () => ref.read(clientProvider).auth.signOutDevice(),
-            icon: const Icon(Icons.logout_rounded),
-          ),
+          if (offline)
+            IconButton(
+              tooltip: 'Keluar dari mode offline',
+              onPressed: () => exitOfflineMode(ref),
+              icon: const Icon(Icons.logout_rounded),
+            )
+          else
+            IconButton(
+              tooltip: 'Keluar',
+              onPressed: () => ref.read(clientProvider).auth.signOutDevice(),
+              icon: const Icon(Icons.logout_rounded),
+            ),
           const SizedBox(width: 8),
         ],
       ),
@@ -45,14 +63,23 @@ class OrganizationsPage extends ConsumerWidget {
         onRetry: () => ref.invalidate(myOrganizationsProvider),
         data: (list) => list.isEmpty
             ? EmptyView(
-                icon: Icons.apartment_rounded,
-                title: 'Belum ada organisasi',
-                message: 'Buat organisasi untuk perusahaan atau komunitas Anda, lalu tambahkan acara undian.',
-                action: FilledButton.icon(
-                  onPressed: () => _create(context, ref),
-                  icon: const Icon(Icons.add_business_rounded),
-                  label: const Text('Buat organisasi'),
-                ),
+                icon: offline ? Icons.cloud_off_rounded : Icons.apartment_rounded,
+                title: offline ? 'Belum ada data di laptop ini' : 'Belum ada organisasi',
+                message: offline
+                    ? 'Impor paket acara dari salinan otomatis atau dari laptop lain untuk melanjutkan undian, '
+                          'atau buat organisasi baru untuk mulai dari awal tanpa server.'
+                    : 'Buat organisasi untuk perusahaan atau komunitas Anda, lalu tambahkan acara undian.',
+                action: offline
+                    ? FilledButton.icon(
+                        onPressed: () => importPackageAndOpen(context, ref),
+                        icon: const Icon(Icons.file_download_rounded),
+                        label: const Text('Impor paket acara'),
+                      )
+                    : FilledButton.icon(
+                        onPressed: () => _create(context, ref),
+                        icon: const Icon(Icons.add_business_rounded),
+                        label: const Text('Buat organisasi'),
+                      ),
               )
             : ListView(
                 padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
@@ -66,7 +93,7 @@ class OrganizationsPage extends ConsumerWidget {
     final name = await askText(context, title: 'Buat organisasi', label: 'Nama perusahaan / organisasi');
     if (name == null || !context.mounted) return;
     try {
-      final created = await ref.read(clientProvider).organization.create(name);
+      final created = await ref.read(repositoryProvider).createOrganization(name);
       ref.invalidate(myOrganizationsProvider);
       if (context.mounted) context.go('/o/${created.organization.id}');
     } catch (e) {

@@ -77,3 +77,8 @@ Future<void> audit(
     transaction: transaction,
   );
 }
+
+/// Melempar [UndianException] bila aturan `UndianRules` mengembalikan pesan kesalahan.
+void ensureValid(String? problem) {
+  if (problem != null) throw UndianException(message: problem);
+}

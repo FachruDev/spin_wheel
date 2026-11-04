@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:undian_client/undian_client.dart';
 
-import '../../core/server/server_providers.dart';
+import '../../core/data/repository_providers.dart';
 import '../../core/ui/async_view.dart';
 import '../../core/ui/dialogs.dart';
 import '../../core/ui/format.dart';
@@ -96,7 +96,7 @@ class WinnersTab extends ConsumerWidget {
       if (note == null) return;
     }
     try {
-      await ref.read(clientProvider).draw.setStatus(winner.id!, status, note);
+      await ref.read(repositoryProvider).setWinnerStatus(winner.id!, status, note);
       ref.invalidate(winnersProvider(eventId));
     } catch (e) {
       if (context.mounted) showErrorSnack(context, e);

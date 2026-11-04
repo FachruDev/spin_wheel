@@ -18,6 +18,11 @@ import 'package:undian_client/undian_client.dart';
 import 'package:undian_flutter/app/app.dart';
 import 'package:undian_flutter/app/fonts.dart';
 import 'package:undian_flutter/core/server/server_providers.dart';
+import 'package:undian_flutter/features/events/event_page.dart';
+import 'package:undian_flutter/features/offline/offline_providers.dart';
+import 'package:undian_flutter/features/offline/package/event_package.dart';
+import 'package:undian_flutter/features/offline/store/offline_files_io.dart';
+import 'package:undian_flutter/features/offline/store/offline_repository.dart';
 import 'package:undian_flutter/features/participants/import/import_dialog.dart';
 import 'package:undian_flutter/features/participants/participants_tab.dart';
 
@@ -72,13 +77,20 @@ List<int> participantWorkbook() {
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
-  testWidgets('daftar → organisasi → acara → import → hadiah → undi → pemenang tersimpan', (tester) async {
+  testWidgets('daftar → organisasi → acara → import → hadiah → undi → server mati → lanjut offline', (tester) async {
     expect(serverLog, isNotEmpty, reason: 'jalankan dengan --dart-define=SERVER_LOG=...');
     AppFonts.useGoogleFonts = false;
     final client = await createClient();
     await client.auth.signOutDevice();
+    // Data offline dan salinan otomatis di folder sementara, bukan di data aplikasi laptop ini.
+    final tempDir = await Directory.systemTemp.createTemp('undian_e2e');
+    addTearDown(() => tempDir.delete(recursive: true));
+    final offlineFiles = IoOfflineFiles(baseDirectory: () async => Directory('${tempDir.path}/laptop_a'));
     await tester.pumpWidget(
-      ProviderScope(overrides: [clientProvider.overrideWithValue(client)], child: const UndianApp()),
+      ProviderScope(
+        overrides: [clientProvider.overrideWithValue(client), offlineFilesProvider.overrideWithValue(offlineFiles)],
+        child: const UndianApp(),
+      ),
     );
     await pumpUntil(tester, find.text('Belum punya akun? Daftar'));
 
@@ -185,5 +197,69 @@ void main() {
       expect(groups, contains(expected), reason: 'pemenang ${prizes[w.prizeId]} harus dari grup $expected');
       expect(w.status, WinnerStatus.sah);
     }
+
+    // --- Server bermasalah: laptop ini lanjut di mode offline dari salinan otomatis. ---------
+    await pumpUntil(tester, find.textContaining('Salinan offline '), seconds: 15);
+    final backups = await offlineFiles.listBackups();
+    expect(backups, hasLength(1));
+    final backup = EventPackage.decode(await offlineFiles.readFile(backups.single.path));
+    expect(backup.activeWinnerCount, 11, reason: 'salinan otomatis sudah memuat hasil undian terakhir');
+
+    await client.auth.signOutDevice();
+    await pumpUntil(tester, find.byKey(const ValueKey('offline-mode')));
+    await tester.tap(find.byKey(const ValueKey('offline-mode')));
+    await pumpUntil(tester, find.text('Belum ada data di laptop ini'));
+    await tester.tap(find.byKey(const ValueKey('import-package-open')));
+    await pumpUntil(tester, find.text('PT Uji Coba – HUT Uji 2026'));
+    await tester.tap(find.text('PT Uji Coba – HUT Uji 2026'));
+    await pumpUntil(tester, find.byKey(const ValueKey('import-package')));
+    await tester.tap(find.byKey(const ValueKey('import-package')));
+    await pumpUntil(tester, find.textContaining('Data tersimpan di laptop ini'));
+    await tester.tap(find.text('Pemenang'));
+    await pumpUntil(tester, find.text('11 pemenang sah · 0 hangus'));
+    await tester.pump(const Duration(seconds: 1));
+
+    // Satu pemenang voucher hangus, lalu unitnya diundi ulang di panggung offline.
+    final container = ProviderScope.containerOf(tester.element(find.byType(EventPage)));
+    final offline = container.read(activeOfflineRepositoryProvider)!;
+    final offlineEventId = tester.widget<EventPage>(find.byType(EventPage)).eventId;
+    final offlinePrizes = {for (final p in await offline.prizes(offlineEventId)) p.name: p.id};
+    final voucherWinner = (await offline.winners(
+      offlineEventId,
+    )).firstWhere((w) => w.prizeId == offlinePrizes['Voucher Uji']);
+    await offline.setWinnerStatus(voucherWinner.id!, WinnerStatus.hangus, 'Tidak hadir');
+    await tester.tap(find.text('Buka panggung'));
+    await pumpUntil(tester, find.text('HADIAH BERIKUTNYA'));
+    // Voucher (sisa 1 unit) sudah otomatis jadi hadiah berikutnya: judul besar + item di panel operator.
+    expect(find.text('Voucher Uji'), findsNWidgets(2));
+    await tester.tap(find.text('Voucher Uji').last);
+    await tester.pump(const Duration(milliseconds: 300));
+    await tester.sendKeyEvent(LogicalKeyboardKey.space);
+    await pumpUntil(tester, find.text('LANJUT  (Spasi)'), seconds: 30);
+    await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+    await pumpUntil(tester, find.text('Buka panggung'));
+    await tester.tap(find.text('Pemenang'));
+    await pumpUntil(tester, find.text('11 pemenang sah · 1 hangus'));
+
+    // Data offline tersimpan di file, dan server tidak tersentuh.
+    final reopened = await OfflineRepository.open(await offlineFiles.openStorage());
+    final offlineWinners = await reopened.winners(offlineEventId);
+    expect(offlineWinners, hasLength(12));
+    final redrawn = offlineWinners.last;
+    expect(redrawn.participantId, isNot(voucherWinner.participantId));
+    expect(redrawn.roundNo, 3);
+    // Perubahan offline tidak memicu salinan otomatis server: salinan tetap berisi data server (11).
+    final backupAfter = EventPackage.decode(await offlineFiles.readFile(backups.single.path));
+    expect(backupAfter.winners, hasLength(11));
+
+    // Laptop B: impor paket dari laptop ini dan dapat data yang sama persis.
+    final package = await offline.exportPackage(offlineEventId, exportedFrom: 'LAPTOP-A · mode offline');
+    final laptopB = await OfflineRepository.open(
+      await IoOfflineFiles(baseDirectory: () async => Directory('${tempDir.path}/laptop_b')).openStorage(),
+    );
+    final onB = await laptopB.importPackage(EventPackage.decode(package.encode()));
+    final winnersB = await laptopB.winners(onB.id!);
+    expect(winnersB.where((w) => w.status == WinnerStatus.sah), hasLength(11));
+    expect(winnersB.where((w) => w.status == WinnerStatus.hangus).single.note, 'Tidak hadir');
   });
 }

@@ -3,8 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:undian_client/undian_client.dart';
 import 'package:undian_core/undian_core.dart' as core;
 
+import '../../core/data/repository_providers.dart';
 import '../../core/server/core_mapping.dart';
-import '../../core/server/server_providers.dart';
 import '../../core/ui/async_view.dart';
 import '../../core/ui/dialogs.dart';
 import '../events/event_providers.dart';
@@ -43,7 +43,7 @@ class PrizesTab extends ConsumerWidget {
       );
       if (draft == null || !context.mounted) return;
       try {
-        await ref.read(clientProvider).prize.save(draft);
+        await ref.read(repositoryProvider).savePrize(draft);
         ref.invalidate(prizesProvider(_eventId));
       } catch (e) {
         if (context.mounted) showErrorSnack(context, e);
@@ -114,7 +114,7 @@ class PrizesTab extends ConsumerWidget {
     );
     if (!ok || !context.mounted) return;
     try {
-      await ref.read(clientProvider).prize.delete(prize.id!);
+      await ref.read(repositoryProvider).deletePrize(prize);
       ref.invalidate(prizesProvider(_eventId));
     } catch (e) {
       if (context.mounted) showErrorSnack(context, e);

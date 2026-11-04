@@ -3,3 +3,4 @@ library;
 
 export 'src/draw_engine.dart';
 export 'src/models.dart';
+export 'src/rules.dart';

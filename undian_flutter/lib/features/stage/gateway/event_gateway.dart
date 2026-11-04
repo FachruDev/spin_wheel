@@ -1,17 +1,19 @@
 import 'package:undian_client/undian_client.dart' as api;
 import 'package:undian_core/undian_core.dart';
 
+import '../../../core/data/undian_repository.dart';
 import '../../../core/server/core_mapping.dart';
 import 'stage_gateway.dart';
 
-/// Panggung untuk acara di server: undian dijalankan dan dicatat oleh server.
-class ServerStageGateway implements StageGateway {
-  ServerStageGateway(this._client, this._event);
+/// Panggung untuk acara sungguhan: undian dijalankan dan dicatat oleh sumber data acara
+/// (server, atau penyimpanan di laptop pada mode offline).
+class EventStageGateway implements StageGateway {
+  EventStageGateway(this._repository, this._event);
 
-  final api.Client _client;
+  final UndianRepository _repository;
   final api.DrawEvent _event;
 
-  /// id catatan pemenang di server, per (peserta, hadiah); dipakai saat menandai hangus.
+  /// id catatan pemenang per (peserta, hadiah); dipakai saat menandai hangus.
   final _recordIds = <(int, int), int>{};
 
   @override
@@ -22,9 +24,9 @@ class ServerStageGateway implements StageGateway {
   @override
   Future<StageData> load() async {
     final (participants, prizes, winners) = await (
-      _client.participant.list(_eventId),
-      _client.prize.list(_eventId),
-      _client.draw.winners(_eventId),
+      _repository.participants(_eventId),
+      _repository.prizes(_eventId),
+      _repository.winners(_eventId),
     ).wait;
     _recordIds
       ..clear()
@@ -39,7 +41,7 @@ class ServerStageGateway implements StageGateway {
 
   @override
   Future<DrawOutcome> draw({required Prize prize, required int count, required StageData current}) async {
-    final result = await _client.draw.draw(prize.id, count);
+    final result = await _repository.draw(prize.id, count);
     for (final record in result.winnerRecords) {
       _recordIds[(record.participantId, record.prizeId)] = record.id!;
     }
@@ -54,6 +56,6 @@ class ServerStageGateway implements StageGateway {
   Future<void> forfeit(Winner winner, String reason) async {
     final id = _recordIds[(winner.participantId, winner.prizeId)];
     if (id == null) throw api.UndianException(message: 'Data pemenang tidak ditemukan. Muat ulang panggung.');
-    await _client.draw.setStatus(id, api.WinnerStatus.hangus, reason);
+    await _repository.setWinnerStatus(id, api.WinnerStatus.hangus, reason);
   }
 }

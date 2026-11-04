@@ -7,6 +7,7 @@ lib/
   main.dart              → buat client Serverpod, pulihkan sesi login, jalankan app
   app/                   → MaterialApp, router (redirect ke /masuk bila belum login), font
   core/
+    data/                → UndianRepository: satu pintu data untuk semua halaman (server atau offline)
     server/              → client Serverpod (SERVER_URL), konversi model server → undian_core
     ui/                  → tampilan async/error/kosong, dialog, format tanggal
   features/
@@ -18,8 +19,32 @@ lib/
     winners/             → pemenang per putaran, ubah status (diserahkan/ditransfer/hangus)
     branding/            → model & dialog identitas, logo
     stage/               → layar panggung, panel operator, animasi
-      gateway/           → sumber data panggung: demo (lokal) atau server
+      gateway/           → sumber data panggung: demo, atau acara (server/offline)
+    offline/             → mode offline (desktop)
+      store/             → data offline di file laptop, aturan sama dengan server
+      package/           → paket acara .undian (ekspor/impor antar laptop)
+      backup/            → salinan otomatis acara dari server
+      ui/                → dialog impor, tombol ekspor, penanda offline
 ```
+
+## Mode offline (aplikasi Windows)
+
+Untuk saat server bermasalah. Tombol **Mode offline (tanpa server)** ada di halaman masuk; tidak
+perlu login. Data disimpan di `%APPDATA%\Undian\Undian\offline\data.json` (versi sebelumnya di
+`data.json.bak`), dan aturan undian, stok, import, hadiah, serta status pemenang sama persis dengan
+server karena memakai `undian_core`.
+
+- **Salinan otomatis.** Saat online, setiap kali acara dibuka atau berubah (import, hadiah, undian,
+  status), seluruh data acara disimpan di `%APPDATA%\Undian\Undian\Salinan otomatis\`. Status
+  "Salinan offline 10.12" tampil di app bar halaman acara.
+- **Paket acara (`.undian`).** Tombol ekspor di halaman acara (online maupun offline) menyimpan satu
+  file berisi identitas organisasi, acara, peserta, hadiah, dan pemenang. File ini berisi data
+  pribadi peserta, jadi perlakukan sebagai dokumen rahasia.
+- **Pindah laptop.** Laptop B cukup memasang `Undian-Setup.exe`, pilih Mode offline → **Impor paket
+  acara**, lalu undian bisa dilanjutkan. Paket yang diimpor ulang bisa mengganti salinan lamanya.
+  Lanjutkan undian hanya di satu laptop pada satu waktu.
+- Hasil undian offline belum bisa dikirim balik ke server (tahap berikutnya). Versi web selalu
+  online.
 
 ## Menjalankan
 
