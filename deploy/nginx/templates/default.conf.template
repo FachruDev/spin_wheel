@@ -38,19 +38,13 @@ server {
     index index.html;
 
     # Aplikasi satu halaman: semua rute diarahkan ke index.html.
+    # Nama file Flutter web (main.dart.js, aset) tidak mengandung hash, jadi semuanya "no-cache":
+    # browser tetap menyimpan salinan, tapi selalu mengecek ETag (304 bila tidak berubah),
+    # sehingga versi baru langsung terpakai setelah deploy.
     location / {
         try_files $uri $uri/ /index.html;
-    }
-
-    # File yang namanya tetap tidak boleh di-cache lama, supaya versi baru langsung terpakai.
-    location ~* ^/(index\.html|flutter_bootstrap\.js|flutter_service_worker\.js|version\.json|manifest\.json)$ {
         include /etc/nginx/conf.d/snippets/headers.inc;
         add_header Cache-Control "no-cache";
-    }
-
-    location ~* \.(?:js|wasm|css|png|jpg|svg|ico|ttf|otf|woff2?)$ {
-        include /etc/nginx/conf.d/snippets/headers.inc;
-        add_header Cache-Control "public, max-age=604800";
     }
 }
 

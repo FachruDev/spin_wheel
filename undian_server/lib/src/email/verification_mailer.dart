@@ -106,8 +106,10 @@ class VerificationMailer {
     try {
       await mailer.send(message, server, timeout: const Duration(seconds: 30));
       session.log('Email ${purpose.name} terkirim ke $email');
-    } on mailer.MailerException catch (e) {
-      session.log('Gagal mengirim email ke $email: ${e.message}', level: LogLevel.error);
+    } catch (e) {
+      // Termasuk host SMTP salah/tidak terjangkau (SocketException), bukan hanya MailerException.
+      final reason = e is mailer.MailerException ? e.message : '$e';
+      session.log('Gagal mengirim email ke $email lewat ${smtp.host}:${smtp.port}: $reason', level: LogLevel.error);
       rethrow;
     }
   }
