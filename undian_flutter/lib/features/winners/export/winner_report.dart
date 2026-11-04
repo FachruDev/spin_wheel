@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import 'package:undian_client/undian_client.dart';
 
+import '../../../core/server/core_mapping.dart';
 import '../../../core/ui/format.dart';
 
 String winnerStatusLabel(WinnerStatus status) => switch (status) {
@@ -9,6 +10,7 @@ String winnerStatusLabel(WinnerStatus status) => switch (status) {
   WinnerStatus.diserahkan => 'Diserahkan',
   WinnerStatus.ditransfer => 'Ditransfer',
   WinnerStatus.hangus => 'Hangus',
+  WinnerStatus.diskualifikasi => 'Didiskualifikasi',
 };
 
 String prizeKindLabel(PrizeKind kind) => switch (kind) {
@@ -24,16 +26,18 @@ class WinnerReportRow {
   final EventParticipant participant;
   final EventPrize prize;
 
-  bool get isValid => winner.status != WinnerStatus.hangus;
+  /// Pemenang sah (bukan hangus atau didiskualifikasi).
+  bool get isValid => winner.status.usesStock;
 }
 
-/// Rekap satu hadiah: unit, pemenang sah, hangus, dan sisa.
+/// Rekap satu hadiah: unit, pemenang sah, hangus, didiskualifikasi, dan sisa.
 class PrizeSummary {
-  const PrizeSummary({required this.prize, required this.valid, required this.forfeited});
+  const PrizeSummary({required this.prize, required this.valid, required this.forfeited, this.disqualified = 0});
 
   final EventPrize prize;
   final int valid;
   final int forfeited;
+  final int disqualified;
 
   int get remaining => prize.quantity - valid;
 }
@@ -77,7 +81,7 @@ class WinnerReport {
   /// Hadiah urut sesuai rundown.
   final List<EventPrize> prizes;
 
-  /// Semua pemenang (termasuk hangus), urut per hadiah lalu putaran.
+  /// Semua pemenang (termasuk hangus dan didiskualifikasi), urut per hadiah lalu putaran.
   late final List<WinnerReportRow> rows;
 
   List<WinnerReportRow> get validRows => [
@@ -90,9 +94,13 @@ class WinnerReport {
       PrizeSummary(
         prize: prize,
         valid: rows.where((r) => r.prize.id == prize.id && r.isValid).length,
-        forfeited: rows.where((r) => r.prize.id == prize.id && !r.isValid).length,
+        forfeited: _count(prize, WinnerStatus.hangus),
+        disqualified: _count(prize, WinnerStatus.diskualifikasi),
       ),
   ];
+
+  int _count(EventPrize prize, WinnerStatus status) =>
+      rows.where((r) => r.prize.id == prize.id && r.winner.status == status).length;
 
   /// Pemenang sah dikelompokkan per area peserta (untuk bukti tanda terima), urut nama area.
   Map<String, List<WinnerReportRow>> get validRowsByArea {

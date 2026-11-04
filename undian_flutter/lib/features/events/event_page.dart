@@ -13,6 +13,7 @@ import '../organizations/organization_providers.dart';
 import '../participants/participants_tab.dart';
 import '../prizes/prizes_tab.dart';
 import '../winners/winners_tab.dart';
+import 'event_form_dialog.dart';
 import 'event_providers.dart';
 
 /// Satu acara: tab Peserta, Hadiah, Pemenang, tombol ekspor paket, dan tombol membuka panggung.
@@ -63,6 +64,13 @@ class _EventPageState extends ConsumerState<EventPage> {
           title: TitleWithOfflineBadge(event.value?.name ?? 'Acara'),
           actions: [
             if (!offline) _BackupStatus(eventId: _eventId),
+            if ((member?.canManage ?? false) && event.value != null)
+              IconButton(
+                key: const ValueKey('edit-event'),
+                tooltip: 'Ubah acara',
+                onPressed: () => editEvent(context, ref, event.value!),
+                icon: const Icon(Icons.edit_rounded),
+              ),
             if (member?.canDraw ?? false)
               IconButton(
                 key: const ValueKey('export-package'),

@@ -11,11 +11,10 @@ import '../features/events/events_page.dart';
 import '../features/organizations/organizations_page.dart';
 import '../features/stage/stage_routes.dart';
 
-/// Rute aplikasi. Semua halaman kecuali login dan demo butuh login, kecuali di mode offline
-/// (data di laptop ini, tanpa server dan tanpa login).
+/// Rute aplikasi. Semua halaman kecuali login butuh login, kecuali di mode offline (data di
+/// laptop ini, tanpa server dan tanpa login).
 ///
 ///   /masuk                      → login / daftar / masuk mode offline
-///   /demo                       → panggung demo (tanpa server)
 ///   /                           → organisasi saya
 ///   /o/:org                     → acara dalam organisasi
 ///   /o/:org/a/:event            → peserta, hadiah, pemenang
@@ -29,14 +28,12 @@ final routerProvider = Provider<GoRouter>((ref) {
     redirect: (context, state) {
       final path = state.uri.path;
       final signedIn = auth.isAuthenticated || offline.value;
-      final public = path == '/masuk' || path == '/demo';
-      if (!signedIn && !public) return '/masuk';
+      if (!signedIn && path != '/masuk') return '/masuk';
       if (signedIn && path == '/masuk') return '/';
       return null;
     },
     routes: [
       GoRoute(path: '/masuk', builder: (_, _) => const SignInPage()),
-      GoRoute(path: '/demo', builder: (_, _) => const DemoStageRoute()),
       GoRoute(
         path: '/',
         builder: (_, _) => const OrganizationsPage(),

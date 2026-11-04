@@ -275,8 +275,8 @@ class EndpointDraw extends _i2.EndpointRef {
     },
   );
 
-  /// Mengubah status pemenang. Hangus wajib beralasan dan bersifat final, karena unitnya
-  /// kembali ke stok dan bisa langsung diundi ulang.
+  /// Mengubah status pemenang. Hangus dan diskualifikasi wajib beralasan dan bersifat final,
+  /// karena unitnya kembali ke stok dan bisa langsung diundi ulang.
   _i3.Future<_i6.PrizeWinner> setStatus(
     int winnerId,
     _i7.WinnerStatus status,
@@ -317,6 +317,24 @@ class EndpointEvent extends _i2.EndpointRef {
     'create',
     {
       'organizationId': organizationId,
+      'name': name,
+      'eventDate': eventDate,
+      'allowMultipleWins': allowMultipleWins,
+    },
+  );
+
+  /// Mengubah nama, tanggal, dan aturan menang lebih dari sekali. Aturan baru berlaku untuk
+  /// undian berikutnya; pemenang yang sudah ada tidak berubah.
+  _i3.Future<_i8.DrawEvent> update(
+    int eventId,
+    String name,
+    DateTime? eventDate,
+    bool allowMultipleWins,
+  ) => caller.callServerEndpoint<_i8.DrawEvent>(
+    'event',
+    'update',
+    {
+      'eventId': eventId,
       'name': name,
       'eventDate': eventDate,
       'allowMultipleWins': allowMultipleWins,
@@ -406,6 +424,39 @@ class EndpointParticipant extends _i2.EndpointRef {
       'rows': rows,
       'replaceAll': replaceAll,
     },
+  );
+
+  /// Menambah satu peserta lewat formulir. NIK harus belum terdaftar di acara ini.
+  _i3.Future<_i12.EventParticipant> add(
+    int eventId,
+    _i14.ParticipantInput input,
+  ) => caller.callServerEndpoint<_i12.EventParticipant>(
+    'participant',
+    'add',
+    {
+      'eventId': eventId,
+      'input': input,
+    },
+  );
+
+  /// Mengubah data satu peserta. NIK boleh diganti selama belum dipakai peserta lain.
+  _i3.Future<_i12.EventParticipant> update(
+    int participantId,
+    _i14.ParticipantInput input,
+  ) => caller.callServerEndpoint<_i12.EventParticipant>(
+    'participant',
+    'update',
+    {
+      'participantId': participantId,
+      'input': input,
+    },
+  );
+
+  /// Menghapus peserta yang belum pernah terundi.
+  _i3.Future<void> delete(int participantId) => caller.callServerEndpoint<void>(
+    'participant',
+    'delete',
+    {'participantId': participantId},
   );
 }
 

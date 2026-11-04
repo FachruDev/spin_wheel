@@ -20,6 +20,10 @@ abstract final class UndianRules {
       'Acara ini sudah punya pemenang, jadi data peserta tidak bisa diganti total. '
       'Gunakan mode tambah/perbarui.';
   static const deleteDrawnPrizeMessage = 'Hadiah yang sudah diundi tidak bisa dihapus.';
+  static const deleteDrawnParticipantMessage =
+      'Peserta yang sudah pernah terundi tidak bisa dihapus. Ubah status pemenangnya bila perlu.';
+
+  static String duplicateNikMessage(String nik) => 'NIK $nik sudah terdaftar di acara ini.';
 
   /// [what] mis. "organisasi", "acara", "hadiah".
   static String? nameProblem(String name, String what) => name.trim().isEmpty ? 'Nama $what wajib diisi.' : null;
@@ -59,12 +63,25 @@ abstract final class UndianRules {
   static String? prizeQuantityProblem({required int quantity, required int used}) =>
       quantity < used ? 'Sudah $used unit terundi; jumlah unit tidak boleh kurang dari itu.' : null;
 
-  /// Hangus wajib beralasan dan bersifat final, karena unitnya kembali ke stok.
+  /// Hangus dan diskualifikasi wajib beralasan dan bersifat final, karena unitnya kembali ke stok.
   static String? statusChangeProblem({required WinnerStatus current, required WinnerStatus next, String? note}) {
-    if (next == WinnerStatus.hangus && (note == null || note.trim().isEmpty)) {
-      return 'Alasan wajib diisi untuk menandai hangus.';
+    if (next.isFinal && (note == null || note.trim().isEmpty)) {
+      return next == WinnerStatus.hangus
+          ? 'Alasan wajib diisi untuk menandai hangus.'
+          : 'Alasan wajib diisi untuk mendiskualifikasi pemenang.';
     }
-    if (current == WinnerStatus.hangus) return 'Pemenang yang sudah hangus tidak bisa diubah statusnya.';
+    if (current.isFinal) {
+      final label = current == WinnerStatus.hangus ? 'hangus' : 'didiskualifikasi';
+      return 'Pemenang yang sudah $label tidak bisa diubah statusnya.';
+    }
+    return null;
+  }
+
+  /// Data satu peserta yang ditambah atau diubah lewat formulir. [row] sudah dirapikan.
+  static String? participantProblem(ImportRow row) {
+    if (row.nik.isEmpty) return 'NIK wajib diisi.';
+    if (row.name.isEmpty) return 'Nama peserta wajib diisi.';
+    if (row.points < 1) return 'Poin minimal 1.';
     return null;
   }
 

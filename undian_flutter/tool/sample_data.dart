@@ -2,54 +2,86 @@ import 'dart:math';
 
 import 'package:undian_core/undian_core.dart';
 
-/// Data contoh untuk prototipe. Nama-nama dibuat acak, bukan data karyawan asli.
-/// Pola grup mengikuti kebiasaan acara sebelumnya: doorprize per wilayah, grand prize
-/// hanya untuk pegawai tetap dan percobaan.
-abstract final class DemoData {
+/// Data contoh untuk mencoba aplikasi dan untuk tes: 400 peserta dan 10 hadiah. Nama dan NIK
+/// dibuat acak, bukan data karyawan asli.
+///
+/// Pola grup mengikuti kebiasaan acara sebelumnya: doorprize per wilayah (Bogor/Jakarta), grand
+/// prize hanya untuk pegawai tetap dan percobaan.
+abstract final class SampleData {
   static const doorprizeBogor = 'Doorprize Bogor';
   static const doorprizeJakarta = 'Doorprize Jakarta';
   static const grandprizeBogor = 'Grandprize Bogor';
   static const grandprizeJakarta = 'Grandprize Jakarta';
 
+  /// 10 hadiah urut rundown: 6 doorprize lalu 4 grand prize.
   static List<Prize> prizes() => const [
     Prize(
       id: 1,
-      name: 'Voucher Belanja Rp300.000',
+      name: 'Voucher Belanja Rp200.000',
       kind: PrizeKind.doorprize,
-      quantity: 40,
+      quantity: 30,
       eligibleGroups: {doorprizeBogor},
     ),
-    Prize(id: 2, name: 'Hand Mixer', kind: PrizeKind.doorprize, quantity: 15, eligibleGroups: {doorprizeJakarta}),
+    Prize(
+      id: 2,
+      name: 'Tumbler Stainless',
+      kind: PrizeKind.doorprize,
+      quantity: 20,
+      eligibleGroups: {doorprizeJakarta},
+    ),
     Prize(
       id: 3,
+      name: 'Kipas Angin Berdiri',
+      kind: PrizeKind.doorprize,
+      quantity: 15,
+      eligibleGroups: {doorprizeBogor},
+    ),
+    Prize(id: 4, name: 'Hand Mixer', kind: PrizeKind.doorprize, quantity: 10, eligibleGroups: {doorprizeJakarta}),
+    Prize(
+      id: 5,
       name: 'Rice Cooker Digital',
       kind: PrizeKind.doorprize,
-      quantity: 12,
+      quantity: 10,
       eligibleGroups: {doorprizeBogor, doorprizeJakarta},
     ),
     Prize(
-      id: 4,
+      id: 6,
+      name: 'Blender 2 Liter',
+      kind: PrizeKind.doorprize,
+      quantity: 8,
+      eligibleGroups: {doorprizeBogor, doorprizeJakarta},
+    ),
+    Prize(
+      id: 7,
+      name: 'Smartphone 128 GB',
+      kind: PrizeKind.grandprize,
+      quantity: 3,
+      eligibleGroups: {grandprizeBogor, grandprizeJakarta},
+    ),
+    Prize(
+      id: 8,
       name: 'Smart TV 50 inci',
       kind: PrizeKind.grandprize,
-      quantity: 1,
+      quantity: 2,
       eligibleGroups: {grandprizeJakarta},
     ),
     Prize(
-      id: 5,
-      name: 'Sepeda Motor Matic',
-      kind: PrizeKind.grandprize,
-      quantity: 1,
-      eligibleGroups: {grandprizeBogor},
-    ),
-    Prize(
-      id: 6,
+      id: 9,
       name: 'Logam Mulia 10 gram',
       kind: PrizeKind.grandprize,
       quantity: 2,
       eligibleGroups: {grandprizeBogor, grandprizeJakarta},
     ),
+    Prize(
+      id: 10,
+      name: 'Sepeda Motor Matic',
+      kind: PrizeKind.grandprize,
+      quantity: 1,
+      eligibleGroups: {grandprizeBogor},
+    ),
   ];
 
+  /// 400 peserta dengan NIK unik. Hasilnya selalu sama (bibit acak tetap).
   static List<Participant> participants() {
     final rnd = Random(2026);
     final niks = <String>{};
@@ -61,7 +93,7 @@ abstract final class DemoData {
         final roll = rnd.nextDouble();
         final status = roll < 0.74
             ? 'Pegawai Tetap'
-            : roll < 0.76
+            : roll < 0.78
             ? 'Percobaan'
             : 'Kontrak';
         String nik;
@@ -99,8 +131,9 @@ abstract final class DemoData {
 
   static String _two(int n) => n.toString().padLeft(2, '0');
 
+  /// Jumlah peserta per area; totalnya 400.
   static const _areas = [
-    ('Bogor Plant', 271),
+    ('Bogor Plant', 241),
     ('Head Office', 101),
     ('Kebayoran Lama', 21),
     ('Bogor Non Plant', 9),

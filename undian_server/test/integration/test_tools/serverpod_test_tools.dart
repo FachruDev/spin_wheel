@@ -675,6 +675,45 @@ class _EventEndpoint {
     });
   }
 
+  _i3.Future<_i8.DrawEvent> update(
+    _i1.TestSessionBuilder sessionBuilder,
+    int eventId,
+    String name,
+    DateTime? eventDate,
+    bool allowMultipleWins,
+  ) async {
+    return _i1.callAwaitableFunctionAndHandleExceptions(() async {
+      var _localUniqueSession =
+          (sessionBuilder as _i1.InternalTestSessionBuilder).internalBuild(
+            endpoint: 'event',
+            method: 'update',
+          );
+      try {
+        var _localCallContext = await _endpointDispatch.getMethodCallContext(
+          createSessionCallback: (_) => _localUniqueSession,
+          endpointPath: 'event',
+          methodName: 'update',
+          parameters: _i1.testObjectToJson({
+            'eventId': eventId,
+            'name': name,
+            'eventDate': eventDate,
+            'allowMultipleWins': allowMultipleWins,
+          }),
+          serializationManager: _serializationManager,
+        );
+        var _localReturnValue =
+            await (_localCallContext.method.call(
+                  _localUniqueSession,
+                  _localCallContext.arguments,
+                )
+                as _i3.Future<_i8.DrawEvent>);
+        return _localReturnValue;
+      } finally {
+        await _localUniqueSession.close();
+      }
+    });
+  }
+
   _i3.Future<List<_i8.DrawEvent>> list(
     _i1.TestSessionBuilder sessionBuilder,
     int organizationId,
@@ -891,6 +930,107 @@ class _ParticipantEndpoint {
                   _localCallContext.arguments,
                 )
                 as _i3.Future<_i13.ImportResult>);
+        return _localReturnValue;
+      } finally {
+        await _localUniqueSession.close();
+      }
+    });
+  }
+
+  _i3.Future<_i12.EventParticipant> add(
+    _i1.TestSessionBuilder sessionBuilder,
+    int eventId,
+    _i14.ParticipantInput input,
+  ) async {
+    return _i1.callAwaitableFunctionAndHandleExceptions(() async {
+      var _localUniqueSession =
+          (sessionBuilder as _i1.InternalTestSessionBuilder).internalBuild(
+            endpoint: 'participant',
+            method: 'add',
+          );
+      try {
+        var _localCallContext = await _endpointDispatch.getMethodCallContext(
+          createSessionCallback: (_) => _localUniqueSession,
+          endpointPath: 'participant',
+          methodName: 'add',
+          parameters: _i1.testObjectToJson({
+            'eventId': eventId,
+            'input': input,
+          }),
+          serializationManager: _serializationManager,
+        );
+        var _localReturnValue =
+            await (_localCallContext.method.call(
+                  _localUniqueSession,
+                  _localCallContext.arguments,
+                )
+                as _i3.Future<_i12.EventParticipant>);
+        return _localReturnValue;
+      } finally {
+        await _localUniqueSession.close();
+      }
+    });
+  }
+
+  _i3.Future<_i12.EventParticipant> update(
+    _i1.TestSessionBuilder sessionBuilder,
+    int participantId,
+    _i14.ParticipantInput input,
+  ) async {
+    return _i1.callAwaitableFunctionAndHandleExceptions(() async {
+      var _localUniqueSession =
+          (sessionBuilder as _i1.InternalTestSessionBuilder).internalBuild(
+            endpoint: 'participant',
+            method: 'update',
+          );
+      try {
+        var _localCallContext = await _endpointDispatch.getMethodCallContext(
+          createSessionCallback: (_) => _localUniqueSession,
+          endpointPath: 'participant',
+          methodName: 'update',
+          parameters: _i1.testObjectToJson({
+            'participantId': participantId,
+            'input': input,
+          }),
+          serializationManager: _serializationManager,
+        );
+        var _localReturnValue =
+            await (_localCallContext.method.call(
+                  _localUniqueSession,
+                  _localCallContext.arguments,
+                )
+                as _i3.Future<_i12.EventParticipant>);
+        return _localReturnValue;
+      } finally {
+        await _localUniqueSession.close();
+      }
+    });
+  }
+
+  _i3.Future<void> delete(
+    _i1.TestSessionBuilder sessionBuilder,
+    int participantId,
+  ) async {
+    return _i1.callAwaitableFunctionAndHandleExceptions(() async {
+      var _localUniqueSession =
+          (sessionBuilder as _i1.InternalTestSessionBuilder).internalBuild(
+            endpoint: 'participant',
+            method: 'delete',
+          );
+      try {
+        var _localCallContext = await _endpointDispatch.getMethodCallContext(
+          createSessionCallback: (_) => _localUniqueSession,
+          endpointPath: 'participant',
+          methodName: 'delete',
+          parameters: _i1.testObjectToJson({'participantId': participantId}),
+          serializationManager: _serializationManager,
+        );
+        var _localReturnValue =
+            await (_localCallContext.method.call(
+                  _localUniqueSession,
+                  _localCallContext.arguments,
+                )
+                as _i3.Future<void>);
         return _localReturnValue;
       } finally {
         await _localUniqueSession.close();

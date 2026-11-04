@@ -8,7 +8,7 @@ class DrawEngine {
 
   final Random _random;
 
-  /// Sisa unit [prize] yang belum terundi. Pemenang hangus mengembalikan unitnya.
+  /// Sisa unit [prize] yang belum terundi. Pemenang hangus atau didiskualifikasi mengembalikan unitnya.
   static int remainingStock(Prize prize, Iterable<Winner> winners) {
     final used = winners.where((w) => w.prizeId == prize.id && w.status.usesStock).length;
     return max(0, prize.quantity - used);
@@ -18,8 +18,10 @@ class DrawEngine {
   ///
   /// - Harus anggota salah satu grup hadiah (atau hadiah terbuka untuk semua).
   /// - Peserta yang hangus tidak diikutkan lagi.
-  /// - Tanpa [allowMultipleWins], siapa pun yang sudah menang tidak ikut lagi;
-  ///   dengan [allowMultipleWins], hanya pemenang hadiah yang sama yang dikeluarkan.
+  /// - Siapa pun yang pernah terundi untuk [prize] (termasuk yang didiskualifikasi) tidak ikut
+  ///   undian ulang hadiah yang sama.
+  /// - Tanpa [allowMultipleWins], pemenang sah hadiah lain tidak ikut lagi. Peserta yang
+  ///   didiskualifikasi dari hadiah lain tidak dihitung sebagai pemenang, jadi tetap ikut.
   static List<Participant> eligible({
     required Iterable<Participant> participants,
     required Prize prize,
@@ -28,7 +30,8 @@ class DrawEngine {
   }) {
     final excluded = <int>{
       for (final w in winners)
-        if (w.status == WinnerStatus.hangus || !allowMultipleWins || w.prizeId == prize.id) w.participantId,
+        if (w.status == WinnerStatus.hangus || w.prizeId == prize.id || (!allowMultipleWins && w.status.usesStock))
+          w.participantId,
     };
     return [
       for (final p in participants)

@@ -15,6 +15,7 @@ draw:
   - winners:
 event:
   - create:
+  - update:
   - list:
 organization:
   - create:
@@ -23,6 +24,9 @@ organization:
 participant:
   - list:
   - importRows:
+  - add:
+  - update:
+  - delete:
 prize:
   - list:
   - save:

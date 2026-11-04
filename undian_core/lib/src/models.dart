@@ -12,11 +12,19 @@ enum WinnerStatus {
   /// Hadiah dikirim/ditransfer (mis. peserta daerah yang tidak hadir).
   ditransfer,
 
-  /// Pemenang tidak hadir/batal; unit hadiah kembali ke stok untuk diundi ulang.
-  hangus;
+  /// Pemenang tidak hadir/batal; unit hadiah kembali ke stok untuk diundi ulang, dan orangnya
+  /// tidak ikut undian apa pun lagi.
+  hangus,
 
-  /// Apakah status ini memakai satu unit stok hadiah.
-  bool get usesStock => this != WinnerStatus.hangus;
+  /// Pemenang ternyata tidak memenuhi syarat hadiah ini. Unit hadiah kembali ke stok, orangnya
+  /// tidak ikut undian ulang hadiah ini, tetapi tetap boleh ikut undian hadiah lain.
+  diskualifikasi;
+
+  /// Apakah status ini memakai satu unit stok hadiah (kemenangan yang sah).
+  bool get usesStock => this != WinnerStatus.hangus && this != WinnerStatus.diskualifikasi;
+
+  /// Status akhir yang tidak bisa diubah lagi, karena unit hadiahnya sudah kembali ke stok.
+  bool get isFinal => !usesStock;
 }
 
 class Participant {

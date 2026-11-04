@@ -98,6 +98,97 @@ class ParticipantEndpoint extends Endpoint {
     });
   }
 
+  /// Menambah satu peserta lewat formulir. NIK harus belum terdaftar di acara ini.
+  Future<EventParticipant> add(Session session, int eventId, ParticipantInput input) async {
+    final row = _toImportRow(input).cleaned();
+    ensureValid(core.UndianRules.participantProblem(row));
+    return session.db.transaction((tx) async {
+      final event = await requireEvent(session, eventId, roles: adminRole, transaction: tx);
+      await _ensureNikFree(session, eventId, row.nik, tx);
+      final saved = await EventParticipant.db.insertRow(session, _fromRow(eventId, row), transaction: tx);
+      await audit(
+        session,
+        organizationId: event.organizationId,
+        eventId: eventId,
+        action: 'participant.add',
+        detail: 'Menambah peserta ${row.nik} (${row.name})',
+        transaction: tx,
+      );
+      return saved;
+    });
+  }
+
+  /// Mengubah data satu peserta. NIK boleh diganti selama belum dipakai peserta lain.
+  Future<EventParticipant> update(Session session, int participantId, ParticipantInput input) async {
+    final row = _toImportRow(input).cleaned();
+    ensureValid(core.UndianRules.participantProblem(row));
+    return session.db.transaction((tx) async {
+      final existing = await EventParticipant.db.findById(session, participantId, transaction: tx);
+      if (existing == null) throw notFound();
+      final event = await requireEvent(session, existing.eventId, roles: adminRole, transaction: tx);
+      if (row.nik != existing.nik) await _ensureNikFree(session, existing.eventId, row.nik, tx);
+      final saved = await EventParticipant.db.updateRow(
+        session,
+        _fromRow(existing.eventId, row).copyWith(id: participantId),
+        transaction: tx,
+      );
+      await audit(
+        session,
+        organizationId: event.organizationId,
+        eventId: event.id,
+        action: 'participant.update',
+        detail: 'Mengubah peserta ${existing.nik} (${row.name})',
+        transaction: tx,
+      );
+      return saved;
+    });
+  }
+
+  /// Menghapus peserta yang belum pernah terundi.
+  Future<void> delete(Session session, int participantId) async {
+    await session.db.transaction((tx) async {
+      final participant = await EventParticipant.db.findById(session, participantId, transaction: tx);
+      if (participant == null) throw notFound();
+      final event = await requireEvent(session, participant.eventId, roles: adminRole, transaction: tx);
+      final drawn = await PrizeWinner.db.count(
+        session,
+        where: (t) => t.participantId.equals(participantId),
+        transaction: tx,
+      );
+      if (drawn > 0) throw UndianException(message: core.UndianRules.deleteDrawnParticipantMessage);
+      await EventParticipant.db.deleteRow(session, participant, transaction: tx);
+      await audit(
+        session,
+        organizationId: event.organizationId,
+        eventId: event.id,
+        action: 'participant.delete',
+        detail: 'Menghapus peserta ${participant.nik} (${participant.name})',
+        transaction: tx,
+      );
+    });
+  }
+
+  static Future<void> _ensureNikFree(Session session, int eventId, String nik, Transaction tx) async {
+    final taken = await EventParticipant.db.count(
+      session,
+      where: (t) => t.eventId.equals(eventId) & t.nik.equals(nik),
+      transaction: tx,
+    );
+    if (taken > 0) throw UndianException(message: core.UndianRules.duplicateNikMessage(nik));
+  }
+
+  static EventParticipant _fromRow(int eventId, core.ImportRow row) => EventParticipant(
+    eventId: eventId,
+    nik: row.nik,
+    name: row.name,
+    area: row.area,
+    department: row.department,
+    employmentStatus: row.employmentStatus,
+    phone: row.phone,
+    points: row.points,
+    groups: row.groups,
+  );
+
   static core.ImportRow _toImportRow(ParticipantInput r) => core.ImportRow(
     nik: r.nik,
     name: r.name,

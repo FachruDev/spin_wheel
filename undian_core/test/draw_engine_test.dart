@@ -69,6 +69,30 @@ void main() {
         [2],
       );
     });
+
+    test('didiskualifikasi dari satu hadiah: tidak ikut ulang hadiah itu, tetap ikut hadiah lain', () {
+      final people = [person(1), person(2), person(3)];
+      const winners = [
+        Winner(participantId: 1, prizeId: 77, status: WinnerStatus.diskualifikasi),
+        Winner(participantId: 2, prizeId: 77),
+      ];
+      const sameAsDisqualified = Prize(
+        id: 77,
+        name: 'Hadiah A',
+        kind: PrizeKind.doorprize,
+        quantity: 2,
+        openToAll: true,
+      );
+      expect(DrawEngine.eligible(participants: people, prize: sameAsDisqualified, winners: winners).map((p) => p.id), [
+        3,
+      ]);
+      expect(
+        DrawEngine.eligible(participants: people, prize: doorprizeA, winners: winners).map((p) => p.id),
+        [1, 3],
+        reason: 'peserta 2 pemenang sah hadiah lain; peserta 1 hanya didiskualifikasi',
+      );
+      expect(DrawEngine.remainingStock(sameAsDisqualified, winners), 1);
+    });
   });
 
   group('remainingStock', () {

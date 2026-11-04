@@ -27,9 +27,22 @@ abstract interface class UndianRepository {
     DateTime? eventDate,
     required bool allowMultipleWins,
   });
+  Future<DrawEvent> updateEvent(
+    int eventId, {
+    required String name,
+    DateTime? eventDate,
+    required bool allowMultipleWins,
+  });
 
   Future<List<EventParticipant>> participants(int eventId);
   Future<ImportResult> importParticipants(int eventId, List<ParticipantInput> rows, {required bool replaceAll});
+
+  /// Menambah satu peserta; NIK harus belum terdaftar di acara.
+  Future<EventParticipant> addParticipant(int eventId, ParticipantInput input);
+  Future<EventParticipant> updateParticipant(EventParticipant participant, ParticipantInput input);
+
+  /// Hanya untuk peserta yang belum pernah terundi.
+  Future<void> deleteParticipant(EventParticipant participant);
 
   Future<List<EventPrize>> prizes(int eventId);
 

@@ -149,7 +149,7 @@ class _WinnerPdf {
     ],
   );
 
-  /// Daftar semua pemenang per hadiah, termasuk yang hangus (ditandai di kolom status).
+  /// Daftar semua pemenang per hadiah, termasuk yang hangus/didiskualifikasi (ditandai di kolom status).
   void addList(pw.Document doc) {
     doc.addPage(
       _page(
@@ -192,7 +192,8 @@ class _WinnerPdf {
   void addMinutes(pw.Document doc) {
     final summaries = report.summaries;
     final valid = report.validRows;
-    final forfeited = report.rows.length - valid.length;
+    final forfeited = summaries.fold(0, (sum, s) => sum + s.forfeited);
+    final disqualified = summaries.fold(0, (sum, s) => sum + s.disqualified);
     final units = report.prizes.fold(0, (sum, p) => sum + p.quantity);
     doc.addPage(
       _page(
@@ -212,12 +213,13 @@ class _WinnerPdf {
             text:
                 'Jumlah peserta terdaftar ${report.participantCount} orang. Hadiah yang diundi ${report.prizes.length} '
                 'jenis dengan total $units unit. Pemenang sah ${valid.length} orang'
-                '${forfeited > 0 ? ', dan $forfeited pemenang dinyatakan hangus' : ''}.',
+                '${forfeited > 0 ? '; $forfeited pemenang dinyatakan hangus' : ''}'
+                '${disqualified > 0 ? '; $disqualified pemenang didiskualifikasi dari hadiahnya' : ''}.',
           ),
           pw.Text('Rekapitulasi hadiah', style: _subheading),
           pw.SizedBox(height: 4),
           _table(
-            ['No', 'Hadiah', 'Jenis', 'Unit', 'Sah', 'Hangus', 'Sisa'],
+            ['No', 'Hadiah', 'Jenis', 'Unit', 'Sah', 'Hangus', 'Diskualifikasi', 'Sisa'],
             [
               for (final (i, s) in summaries.indexed)
                 [
@@ -227,6 +229,7 @@ class _WinnerPdf {
                   '${s.prize.quantity}',
                   '${s.valid}',
                   '${s.forfeited}',
+                  '${s.disqualified}',
                   '${s.remaining}',
                 ],
             ],

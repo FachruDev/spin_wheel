@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:undian_client/undian_client.dart';
 
 import '../../../core/data/undian_repository.dart';
+import '../../../core/server/core_mapping.dart';
 import '../store/offline_data.dart';
 
 /// Paket acara (`.undian`): satu file berisi semua data satu acara (identitas organisasi,
@@ -42,8 +43,8 @@ class EventPackage {
   final List<EventPrize> prizes;
   final List<PrizeWinner> winners;
 
-  /// Jumlah pemenang yang masih memakai unit hadiah (tidak hangus).
-  int get activeWinnerCount => winners.where((w) => w.status != WinnerStatus.hangus).length;
+  /// Jumlah pemenang sah yang masih memakai unit hadiah (bukan hangus atau diskualifikasi).
+  int get activeWinnerCount => winners.where((w) => w.status.usesStock).length;
 
   List<int> encode() => utf8.encode(
     jsonEncode({

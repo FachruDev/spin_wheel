@@ -99,8 +99,8 @@ class DrawEndpoint extends Endpoint {
     });
   }
 
-  /// Mengubah status pemenang. Hangus wajib beralasan dan bersifat final, karena unitnya
-  /// kembali ke stok dan bisa langsung diundi ulang.
+  /// Mengubah status pemenang. Hangus dan diskualifikasi wajib beralasan dan bersifat final,
+  /// karena unitnya kembali ke stok dan bisa langsung diundi ulang.
   Future<PrizeWinner> setStatus(Session session, int winnerId, WinnerStatus status, String? note) async {
     final reason = note?.trim();
     return session.db.transaction((tx) async {

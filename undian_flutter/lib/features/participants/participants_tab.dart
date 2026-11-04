@@ -5,8 +5,11 @@ import 'package:undian_client/undian_client.dart';
 import '../../core/ui/async_view.dart';
 import '../events/event_providers.dart';
 import 'import/import_dialog.dart';
+import 'participant_form_dialog.dart';
 
-/// Daftar peserta acara, ringkasan grup, dan tombol import Excel.
+/// Daftar peserta acara, ringkasan grup, tombol tambah peserta, dan import Excel.
+///
+/// Admin bisa mengubah atau menghapus peserta dengan mengklik barisnya.
 class ParticipantsTab extends ConsumerStatefulWidget {
   const ParticipantsTab({super.key, required this.eventId, required this.canManage});
 
@@ -33,14 +36,28 @@ class _ParticipantsTabState extends ConsumerState<ParticipantsTab> {
           icon: const Icon(Icons.upload_file_rounded),
           label: const Text('Import Excel'),
         );
+        final addButton = OutlinedButton.icon(
+          key: const ValueKey('add-participant'),
+          onPressed: () => showParticipantForm(context, eventId: widget.eventId),
+          icon: const Icon(Icons.person_add_alt_1_rounded),
+          label: const Text('Tambah peserta'),
+        );
         if (list.isEmpty) {
           return EmptyView(
             icon: Icons.groups_rounded,
             title: 'Belum ada peserta',
             message: widget.canManage
-                ? 'Import daftar karyawan dari file Excel. Kolom bebas, nanti tinggal dicocokkan.'
+                ? 'Import daftar karyawan dari file Excel (kolom bebas, nanti tinggal dicocokkan), '
+                      'atau tambahkan peserta satu per satu.'
                 : 'Admin belum mengimpor peserta.',
-            action: widget.canManage ? importButton : null,
+            action: widget.canManage
+                ? Wrap(
+                    spacing: 12,
+                    runSpacing: 12,
+                    alignment: WrapAlignment.center,
+                    children: [importButton, addButton],
+                  )
+                : null,
           );
         }
         final filtered = _filter(list);
@@ -60,7 +77,7 @@ class _ParticipantsTabState extends ConsumerState<ParticipantsTab> {
                     onChanged: (v) => setState(() => _query = v.trim().toLowerCase()),
                   ),
                 ),
-                if (widget.canManage) ...[const SizedBox(width: 12), importButton],
+                if (widget.canManage) ...[const SizedBox(width: 12), addButton, const SizedBox(width: 8), importButton],
               ],
             ),
             const SizedBox(height: 12),
@@ -70,6 +87,7 @@ class _ParticipantsTabState extends ConsumerState<ParticipantsTab> {
               key: ValueKey('$_query-${filtered.length}'),
               header: Text('${filtered.length} dari ${list.length} peserta'),
               rowsPerPage: 25,
+              showCheckboxColumn: false,
               availableRowsPerPage: const [25],
               columns: const [
                 DataColumn(label: Text('NIK')),
@@ -80,7 +98,12 @@ class _ParticipantsTabState extends ConsumerState<ParticipantsTab> {
                 DataColumn(label: Text('Poin'), numeric: true),
                 DataColumn(label: Text('Grup')),
               ],
-              source: _ParticipantSource(filtered),
+              source: _ParticipantSource(
+                filtered,
+                onEdit: widget.canManage
+                    ? (p) => showParticipantForm(context, eventId: widget.eventId, participant: p)
+                    : null,
+              ),
             ),
           ],
         );
@@ -123,15 +146,18 @@ class _GroupSummary extends StatelessWidget {
 }
 
 class _ParticipantSource extends DataTableSource {
-  _ParticipantSource(this.items);
+  _ParticipantSource(this.items, {this.onEdit});
 
   final List<EventParticipant> items;
+  final ValueChanged<EventParticipant>? onEdit;
 
   @override
   DataRow? getRow(int index) {
     if (index >= items.length) return null;
     final p = items[index];
+    final edit = onEdit;
     return DataRow(
+      onSelectChanged: edit == null ? null : (_) => edit(p),
       cells: [
         DataCell(Text(p.nik)),
         DataCell(Text(p.name)),

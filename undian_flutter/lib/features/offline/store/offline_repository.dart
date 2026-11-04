@@ -153,6 +153,21 @@ class OfflineRepository implements UndianRepository {
     return event;
   }
 
+  @override
+  Future<DrawEvent> updateEvent(
+    int eventId, {
+    required String name,
+    DateTime? eventDate,
+    required bool allowMultipleWins,
+  }) async {
+    final trimmed = name.trim();
+    _ensure(core.UndianRules.nameProblem(trimmed, 'acara'));
+    final updated = _event(eventId).copyWith(name: trimmed, eventDate: eventDate, allowMultipleWins: allowMultipleWins);
+    _replace(_data.events, (e) => e.id == eventId, updated);
+    await _touch(eventId);
+    return updated;
+  }
+
   /// Keterangan asal acara di laptop ini.
   OfflineEventInfo? eventInfo(int eventId) => _data.eventInfo[eventId];
 
@@ -182,19 +197,7 @@ class OfflineRepository implements UndianRepository {
   @override
   Future<ImportResult> importParticipants(int eventId, List<ParticipantInput> rows, {required bool replaceAll}) async {
     _event(eventId);
-    final plan = core.UndianRules.planImport([
-      for (final r in rows)
-        core.ImportRow(
-          nik: r.nik,
-          name: r.name,
-          area: r.area,
-          department: r.department,
-          employmentStatus: r.employmentStatus,
-          phone: r.phone,
-          points: r.points,
-          groups: r.groups,
-        ),
-    ]);
+    final plan = core.UndianRules.planImport([for (final r in rows) _toImportRow(r)]);
     if (replaceAll && _data.winners.any((w) => w.eventId == eventId)) {
       throw UndianException(message: core.UndianRules.replaceAllWithWinnersMessage);
     }
@@ -204,18 +207,8 @@ class OfflineRepository implements UndianRepository {
     var inserted = 0, updated = 0;
     for (final MapEntry(key: nik, value: row) in plan.valid.entries) {
       final index = _data.participants.indexWhere((p) => p.eventId == eventId && p.nik == nik);
-      final participant = EventParticipant(
-        id: index < 0 ? _data.takeId() : _data.participants[index].id,
-        eventId: eventId,
-        nik: nik,
-        name: row.name,
-        area: row.area,
-        department: row.department,
-        employmentStatus: row.employmentStatus,
-        phone: row.phone,
-        points: row.points,
-        groups: row.groups,
-      );
+      final id = index < 0 ? _data.takeId() : _data.participants[index].id!;
+      final participant = _participantFrom(id, eventId, row);
       if (index < 0) {
         _data.participants.add(participant);
         inserted++;
@@ -227,6 +220,73 @@ class OfflineRepository implements UndianRepository {
     await _touch(eventId);
     return ImportResult(inserted: inserted, updated: updated, rejected: plan.rejected);
   }
+
+  @override
+  Future<EventParticipant> addParticipant(int eventId, ParticipantInput input) async {
+    _event(eventId);
+    final row = _toImportRow(input).cleaned();
+    _ensure(core.UndianRules.participantProblem(row));
+    _ensureNikFree(eventId, row.nik);
+    final participant = _participantFrom(_data.takeId(), eventId, row);
+    _data.participants.add(participant);
+    await _touch(eventId);
+    return participant;
+  }
+
+  @override
+  Future<EventParticipant> updateParticipant(EventParticipant participant, ParticipantInput input) async {
+    final existing = _participant(participant.id);
+    final row = _toImportRow(input).cleaned();
+    _ensure(core.UndianRules.participantProblem(row));
+    if (row.nik != existing.nik) _ensureNikFree(existing.eventId, row.nik);
+    final updated = _participantFrom(existing.id!, existing.eventId, row);
+    _replace(_data.participants, (p) => p.id == existing.id, updated);
+    await _touch(existing.eventId);
+    return updated;
+  }
+
+  @override
+  Future<void> deleteParticipant(EventParticipant participant) async {
+    final existing = _participant(participant.id);
+    if (_data.winners.any((w) => w.participantId == existing.id)) {
+      throw UndianException(message: core.UndianRules.deleteDrawnParticipantMessage);
+    }
+    _data.participants.removeWhere((p) => p.id == existing.id);
+    await _touch(existing.eventId);
+  }
+
+  EventParticipant _participant(int? id) =>
+      _data.participants.firstWhere((p) => p.id == id, orElse: () => throw _notFound());
+
+  void _ensureNikFree(int eventId, String nik) {
+    if (_data.participants.any((p) => p.eventId == eventId && p.nik == nik)) {
+      throw UndianException(message: core.UndianRules.duplicateNikMessage(nik));
+    }
+  }
+
+  static core.ImportRow _toImportRow(ParticipantInput r) => core.ImportRow(
+    nik: r.nik,
+    name: r.name,
+    area: r.area,
+    department: r.department,
+    employmentStatus: r.employmentStatus,
+    phone: r.phone,
+    points: r.points,
+    groups: r.groups,
+  );
+
+  static EventParticipant _participantFrom(int id, int eventId, core.ImportRow row) => EventParticipant(
+    id: id,
+    eventId: eventId,
+    nik: row.nik,
+    name: row.name,
+    area: row.area,
+    department: row.department,
+    employmentStatus: row.employmentStatus,
+    phone: row.phone,
+    points: row.points,
+    groups: row.groups,
+  );
 
   // --- Hadiah ----------------------------------------------------------------------------------
 
@@ -254,7 +314,7 @@ class OfflineRepository implements UndianRepository {
     }
     final existing = _data.prizes.where((p) => p.id == id && p.eventId == prize.eventId);
     if (existing.isEmpty) throw _notFound();
-    final used = _data.winners.where((w) => w.prizeId == id && w.status != WinnerStatus.hangus).length;
+    final used = _data.winners.where((w) => w.prizeId == id && w.status.usesStock).length;
     _ensure(core.UndianRules.prizeQuantityProblem(quantity: prize.quantity, used: used));
     final saved = prize.copyWith(name: name, eligibleGroups: groups);
     _replace(_data.prizes, (p) => p.id == id, saved);

@@ -1,7 +1,6 @@
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class BrandPalette {
   const BrandPalette(this.name, this.primary, this.accent);
@@ -41,8 +40,7 @@ const brandPalettes = [
 /// Identitas organisasi yang tampil di aplikasi dan layar panggung.
 ///
 /// Aplikasi dipakai banyak perusahaan, jadi tidak ada nama atau logo yang ditulis mati.
-/// Untuk organisasi di server nilainya berasal dari tabel organization; [brandingProvider]
-/// hanya dipakai mode demo.
+/// Nilainya berasal dari data organisasi (lihat `toBranding` di organization_providers.dart).
 class Branding {
   const Branding({
     this.organizationName = 'Nama Perusahaan',
@@ -75,13 +73,4 @@ class Branding {
         palette: palette ?? this.palette,
         logoBytes: identical(logoBytes, _keep) ? this.logoBytes : logoBytes as Uint8List?,
       );
-}
-
-final brandingProvider = NotifierProvider<BrandingController, Branding>(BrandingController.new);
-
-class BrandingController extends Notifier<Branding> {
-  @override
-  Branding build() => const Branding();
-
-  void update(Branding branding) => state = branding;
 }

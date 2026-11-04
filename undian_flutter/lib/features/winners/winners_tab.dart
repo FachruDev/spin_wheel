@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:undian_client/undian_client.dart';
 
 import '../../core/data/repository_providers.dart';
+import '../../core/server/core_mapping.dart';
 import '../../core/ui/async_view.dart';
 import '../../core/ui/dialogs.dart';
 import '../../core/ui/format.dart';
@@ -10,8 +11,8 @@ import '../events/event_providers.dart';
 import 'export/export_actions.dart';
 import 'export/winner_report.dart';
 
-/// Daftar pemenang per putaran, dengan aksi ubah status (diserahkan, ditransfer, hangus)
-/// dan export ke Excel/PDF.
+/// Daftar pemenang per putaran, dengan aksi ubah status (diserahkan, ditransfer, hangus,
+/// diskualifikasi) dan export ke Excel/PDF.
 class WinnersTab extends ConsumerWidget {
   const WinnersTab({super.key, required this.event, required this.organization, required this.canDraw});
 
@@ -42,7 +43,9 @@ class WinnersTab extends ConsumerWidget {
           );
         }
         final ordered = list.reversed.toList();
-        final valid = list.where((w) => w.status != WinnerStatus.hangus).length;
+        final valid = list.where((w) => w.status.usesStock).length;
+        final forfeited = list.where((w) => w.status == WinnerStatus.hangus).length;
+        final disqualified = list.where((w) => w.status == WinnerStatus.diskualifikasi).length;
         final logo = organization?.logo;
         WinnerReport report() => WinnerReport(
           organizationName: organization?.name ?? '',
@@ -57,7 +60,12 @@ class WinnersTab extends ConsumerWidget {
           children: [
             Row(
               children: [
-                Expanded(child: Text('$valid pemenang sah · ${list.length - valid} hangus')),
+                Expanded(
+                  child: Text(
+                    '$valid pemenang sah · $forfeited hangus'
+                    '${disqualified > 0 ? ' · $disqualified didiskualifikasi' : ''}',
+                  ),
+                ),
                 WinnerExportButtons(report: report),
               ],
             ),
@@ -70,8 +78,15 @@ class WinnersTab extends ConsumerWidget {
                       winner: w,
                       person: personById[w.participantId],
                       prize: prizeById[w.prizeId],
-                      onStatus: canDraw && w.status != WinnerStatus.hangus
-                          ? (status) => _changeStatus(context, ref, w, status, personById[w.participantId]?.name)
+                      onStatus: canDraw && !w.status.isFinal
+                          ? (status) => _changeStatus(
+                              context,
+                              ref,
+                              w,
+                              status,
+                              name: personById[w.participantId]?.name ?? 'pemenang ini',
+                              prizeName: prizeById[w.prizeId]?.name ?? 'hadiah ini',
+                            )
                           : null,
                     ),
                 ],
@@ -87,12 +102,15 @@ class WinnersTab extends ConsumerWidget {
     BuildContext context,
     WidgetRef ref,
     PrizeWinner winner,
-    WinnerStatus status,
-    String? name,
-  ) async {
+    WinnerStatus status, {
+    required String name,
+    required String prizeName,
+  }) async {
     String? note;
-    if (status == WinnerStatus.hangus) {
-      note = await askForfeitReason(context, name ?? 'pemenang ini');
+    if (status.isFinal) {
+      note = status == WinnerStatus.hangus
+          ? await askForfeitReason(context, name)
+          : await askDisqualifyReason(context, name, prizeName);
       if (note == null) return;
     }
     try {
@@ -115,7 +133,7 @@ class _WinnerRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final forfeited = winner.status == WinnerStatus.hangus;
+    final cancelled = winner.status.isFinal;
     final details = [
       prize?.name ?? 'Hadiah #${winner.prizeId}',
       if (person != null) '${person!.nik} · ${person!.area}',
@@ -126,7 +144,7 @@ class _WinnerRow extends StatelessWidget {
       leading: CircleAvatar(child: Text('${winner.roundNo}')),
       title: Text(
         person?.name ?? 'Peserta #${winner.participantId}',
-        style: TextStyle(decoration: forfeited ? TextDecoration.lineThrough : null),
+        style: TextStyle(decoration: cancelled ? TextDecoration.lineThrough : null),
       ),
       subtitle: Text(details.join('\n')),
       isThreeLine: true,
@@ -135,7 +153,11 @@ class _WinnerRow extends StatelessWidget {
         children: [
           Chip(
             label: Text(winnerStatusLabel(winner.status)),
-            backgroundColor: forfeited ? theme.colorScheme.errorContainer : null,
+            backgroundColor: switch (winner.status) {
+              WinnerStatus.hangus => theme.colorScheme.errorContainer,
+              WinnerStatus.diskualifikasi => theme.colorScheme.tertiaryContainer,
+              _ => null,
+            },
           ),
           if (onStatus != null)
             PopupMenuButton<WinnerStatus>(
@@ -143,7 +165,7 @@ class _WinnerRow extends StatelessWidget {
               onSelected: onStatus,
               itemBuilder: (_) => [
                 for (final s in WinnerStatus.values)
-                  if (s != winner.status) PopupMenuItem(value: s, child: Text(winnerStatusLabel(s))),
+                  if (s != winner.status) PopupMenuItem(value: s, child: Text(_menuLabel(s))),
               ],
             ),
         ],
@@ -151,3 +173,9 @@ class _WinnerRow extends StatelessWidget {
     );
   }
 }
+
+String _menuLabel(WinnerStatus status) => switch (status) {
+  WinnerStatus.hangus => 'Hangus (tidak hadir)',
+  WinnerStatus.diskualifikasi => 'Diskualifikasi dari hadiah ini',
+  _ => winnerStatusLabel(status),
+};

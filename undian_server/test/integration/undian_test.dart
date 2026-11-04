@@ -132,6 +132,63 @@ void main() {
       });
     });
 
+    group('acara', () {
+      test('admin bisa mengubah nama, tanggal, dan aturan menang; orang lain dan nama kosong ditolak', () async {
+        final s = await seed();
+        final date = DateTime.utc(2026, 12, 20);
+        final updated = await endpoints.event.update(alice, s.eventId, '  HUT ke-50  ', date, true);
+        expect(updated.name, 'HUT ke-50');
+        expect(updated.eventDate, date);
+        expect(updated.allowMultipleWins, isTrue);
+        expect((await endpoints.event.list(alice, s.orgId)).single.name, 'HUT ke-50');
+        await expectLater(
+          () => endpoints.event.update(alice, s.eventId, ' ', null, false),
+          throwsA(isA<UndianException>()),
+        );
+        await expectLater(
+          () => endpoints.event.update(bob, s.eventId, 'Diambil alih', null, false),
+          throwsA(isA<UndianException>()),
+        );
+      });
+    });
+
+    group('peserta lewat formulir', () {
+      test('tambah, tolak NIK ganda, ubah termasuk NIK, hapus hanya yang belum terundi', () async {
+        final s = await seed();
+        final added = await endpoints.participant.add(alice, s.eventId, row(' 006 ', ' Fajar ', points: 2));
+        expect((added.nik, added.name, added.points), ('006', 'Fajar', 2));
+        await expectLater(
+          () => endpoints.participant.add(alice, s.eventId, row('001', 'Kembar')),
+          throwsA(isA<UndianException>().having((e) => e.message, 'message', contains('NIK 001 sudah terdaftar'))),
+        );
+        await expectLater(
+          () => endpoints.participant.add(alice, s.eventId, row('007', '')),
+          throwsA(isA<UndianException>()),
+        );
+
+        final renamed = await endpoints.participant.update(alice, added.id!, row('016', 'Fajar Nugroho'));
+        expect((renamed.id, renamed.nik, renamed.name), (added.id, '016', 'Fajar Nugroho'));
+        await expectLater(
+          () => endpoints.participant.update(alice, added.id!, row('002', 'Fajar')),
+          throwsA(isA<UndianException>()),
+        );
+
+        final drawn = await endpoints.draw.draw(alice, s.grandprize.id!, 1);
+        await expectLater(
+          () => endpoints.participant.delete(alice, drawn.winners.single.id!),
+          throwsA(isA<UndianException>().having((e) => e.message, 'message', contains('sudah pernah terundi'))),
+        );
+        await endpoints.participant.delete(alice, added.id!);
+        final niks = (await endpoints.participant.list(alice, s.eventId)).map((p) => p.nik);
+        expect(niks, isNot(contains('016')));
+        expect(niks, hasLength(5));
+        await expectLater(
+          () => endpoints.participant.add(bob, s.eventId, row('099', 'Penyusup')),
+          throwsA(isA<UndianException>()),
+        );
+      });
+    });
+
     group('undian', () {
       test('hanya peserta berhak yang terpilih, stok dan nomor putaran dijaga', () async {
         final s = await seed();
@@ -168,6 +225,41 @@ void main() {
           throwsA(isA<UndianException>()),
         );
       });
+
+      test(
+        'diskualifikasi mengembalikan stok; orangnya tidak ikut ulang hadiah itu tapi tetap ikut hadiah lain',
+        () async {
+          final s = await seed();
+          final first = await endpoints.draw.draw(alice, s.grandprize.id!, 1);
+          final disqualified = first.winners.single;
+          await expectLater(
+            () => endpoints.draw.setStatus(alice, first.winnerRecords.single.id!, WinnerStatus.diskualifikasi, ' '),
+            throwsA(isA<UndianException>()),
+          );
+          await endpoints.draw.setStatus(
+            alice,
+            first.winnerRecords.single.id!,
+            WinnerStatus.diskualifikasi,
+            'Bukan pegawai tetap',
+          );
+
+          final redraw = await endpoints.draw.draw(alice, s.grandprize.id!, 1);
+          expect(redraw.winners.single.id, isNot(disqualified.id), reason: 'tidak ikut ulang hadiah yang sama');
+
+          // Pemenang grand prize yang sah tidak ikut doorprize; yang didiskualifikasi tetap ikut.
+          final door = await endpoints.draw.draw(alice, s.doorprize.id!, 1);
+          expect(door.poolSize, 4);
+          expect(door.poolSample.map((p) => p.id), contains(disqualified.id));
+          expect(door.poolSample.map((p) => p.id), isNot(contains(redraw.winners.single.id)));
+
+          await expectLater(
+            () => endpoints.draw.setStatus(alice, first.winnerRecords.single.id!, WinnerStatus.sah, null),
+            throwsA(isA<UndianException>()),
+          );
+          // Unit yang didiskualifikasi tidak dihitung saat mengurangi jumlah unit hadiah.
+          await endpoints.prize.save(alice, s.grandprize.copyWith(quantity: 1));
+        },
+      );
 
       test('setiap undian tercatat di log audit', () async {
         final s = await seed();

@@ -23,8 +23,11 @@ enum WinnerStatus implements _i1.SerializableModel {
   /// Hadiah dikirim/ditransfer (mis. peserta daerah yang tidak hadir).
   ditransfer,
 
-  /// Pemenang tidak hadir/batal; unit hadiah kembali ke stok.
-  hangus;
+  /// Pemenang tidak hadir/batal; unit hadiah kembali ke stok dan orangnya tidak ikut undian lagi.
+  hangus,
+
+  /// Tidak memenuhi syarat hadiah ini; unit kembali ke stok, orangnya tetap boleh ikut hadiah lain.
+  diskualifikasi;
 
   static WinnerStatus fromJson(String name) {
     switch (name) {
@@ -36,6 +39,8 @@ enum WinnerStatus implements _i1.SerializableModel {
         return WinnerStatus.ditransfer;
       case 'hangus':
         return WinnerStatus.hangus;
+      case 'diskualifikasi':
+        return WinnerStatus.diskualifikasi;
       default:
         throw ArgumentError(
           'Value "$name" cannot be converted to "WinnerStatus"',

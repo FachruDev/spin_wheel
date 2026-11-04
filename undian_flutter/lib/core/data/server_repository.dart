@@ -75,7 +75,39 @@ class ServerRepository implements UndianRepository {
   }
 
   @override
+  Future<DrawEvent> updateEvent(
+    int eventId, {
+    required String name,
+    DateTime? eventDate,
+    required bool allowMultipleWins,
+  }) async {
+    final event = await client.event.update(eventId, name, eventDate, allowMultipleWins);
+    _emit(eventId);
+    return event;
+  }
+
+  @override
   Future<List<EventParticipant>> participants(int eventId) => client.participant.list(eventId);
+
+  @override
+  Future<EventParticipant> addParticipant(int eventId, ParticipantInput input) async {
+    final added = await client.participant.add(eventId, input);
+    _emit(eventId);
+    return added;
+  }
+
+  @override
+  Future<EventParticipant> updateParticipant(EventParticipant participant, ParticipantInput input) async {
+    final updated = await client.participant.update(participant.id!, input);
+    _emit(participant.eventId);
+    return updated;
+  }
+
+  @override
+  Future<void> deleteParticipant(EventParticipant participant) async {
+    await client.participant.delete(participant.id!);
+    _emit(participant.eventId);
+  }
 
   @override
   Future<ImportResult> importParticipants(int eventId, List<ParticipantInput> rows, {required bool replaceAll}) async {

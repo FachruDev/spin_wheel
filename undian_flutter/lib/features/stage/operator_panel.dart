@@ -3,8 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:undian_core/undian_core.dart';
 
 import '../../core/ui/dialogs.dart';
-import '../branding/branding.dart';
-import '../branding/branding_dialog.dart';
 import 'stage_controller.dart';
 import 'stage_page.dart';
 import 'widgets/common.dart';
@@ -19,7 +17,6 @@ class OperatorPanel extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(stageControllerProvider);
     final accent = ref.watch(stageBrandingProvider).accent;
-    final isDemo = ref.watch(stageGatewayProvider).isDemo;
     final controller = ref.read(stageControllerProvider.notifier);
     final theme = Theme.of(context);
     final phase = state.phase;
@@ -118,12 +115,16 @@ class OperatorPanel extends ConsumerWidget {
                     winner: winner,
                     person: state.participantById[winner.participantId]!,
                     prize: state.prizeById(winner.prizeId),
-                    onForfeit: state.isLocked
+                    onCancel: state.isLocked
                         ? null
-                        : () async {
+                        : (status) async {
                             final name = state.participantById[winner.participantId]!.name;
-                            final reason = await askForfeitReason(context, name);
-                            if (reason != null) await controller.forfeit(winner, reason);
+                            final prizeName = state.prizeById(winner.prizeId).name;
+                            final ask = status == WinnerStatus.hangus
+                                ? askForfeitReason(context, name)
+                                : askDisqualifyReason(context, name, prizeName);
+                            final reason = await ask;
+                            if (reason != null) await controller.cancelWinner(winner, status, reason);
                           },
                   ),
               ],
@@ -157,23 +158,11 @@ class OperatorPanel extends ConsumerWidget {
                 const SizedBox(height: 8),
                 Row(
                   children: [
-                    if (isDemo)
-                      Expanded(
-                        child: TextButton.icon(
-                          onPressed: () => showBrandingDialog(
-                            context,
-                            initial: ref.read(brandingProvider),
-                            onSave: (b) async => ref.read(brandingProvider.notifier).update(b),
-                          ),
-                          icon: const Icon(Icons.palette_outlined),
-                          label: const Text('Tampilan'),
-                        ),
-                      ),
                     Expanded(
                       child: TextButton.icon(
                         onPressed: state.isLocked ? null : controller.reload,
                         icon: const Icon(Icons.restart_alt_rounded),
-                        label: Text(isDemo ? 'Reset demo' : 'Muat ulang'),
+                        label: const Text('Muat ulang'),
                       ),
                     ),
                     Expanded(
@@ -286,15 +275,18 @@ class _PrizeTile extends StatelessWidget {
 }
 
 class _WinnerTile extends StatelessWidget {
-  const _WinnerTile({required this.winner, required this.person, required this.prize, required this.onForfeit});
+  const _WinnerTile({required this.winner, required this.person, required this.prize, required this.onCancel});
 
   final Winner winner;
   final Participant person;
   final Prize prize;
-  final VoidCallback? onForfeit;
+
+  /// Membatalkan pemenang dengan status hangus atau diskualifikasi.
+  final ValueChanged<WinnerStatus>? onCancel;
 
   @override
   Widget build(BuildContext context) {
+    final cancelled = winner.status.isFinal;
     final forfeited = winner.status == WinnerStatus.hangus;
     return ListTile(
       dense: true,
@@ -303,20 +295,42 @@ class _WinnerTile extends StatelessWidget {
         person.name,
         style: TextStyle(
           fontWeight: FontWeight.w600,
-          decoration: forfeited ? TextDecoration.lineThrough : null,
-          color: forfeited ? Colors.white38 : null,
+          decoration: cancelled ? TextDecoration.lineThrough : null,
+          color: cancelled ? Colors.white38 : null,
         ),
       ),
       subtitle: Text('${prize.name} · ${person.area}', maxLines: 1, overflow: TextOverflow.ellipsis),
-      trailing: forfeited
-          ? const Text(
-              'HANGUS',
-              style: TextStyle(color: Color(0xFFF87171), fontWeight: FontWeight.w700),
+      trailing: cancelled
+          ? Text(
+              forfeited ? 'HANGUS' : 'DISKUALIFIKASI',
+              style: TextStyle(
+                color: forfeited ? const Color(0xFFF87171) : const Color(0xFFFBBF24),
+                fontWeight: FontWeight.w700,
+              ),
             )
-          : IconButton(
-              tooltip: 'Tidak hadir: tandai hangus & kembalikan stok',
-              onPressed: onForfeit,
+          : PopupMenuButton<WinnerStatus>(
+              tooltip: 'Batalkan pemenang',
+              enabled: onCancel != null,
+              onSelected: onCancel,
               icon: const Icon(Icons.person_off_outlined),
+              itemBuilder: (_) => const [
+                PopupMenuItem(
+                  value: WinnerStatus.hangus,
+                  child: ListTile(
+                    leading: Icon(Icons.event_busy_rounded),
+                    title: Text('Tidak hadir: hangus'),
+                    subtitle: Text('Tidak ikut undian apa pun lagi'),
+                  ),
+                ),
+                PopupMenuItem(
+                  value: WinnerStatus.diskualifikasi,
+                  child: ListTile(
+                    leading: Icon(Icons.gpp_bad_outlined),
+                    title: Text('Tidak memenuhi syarat: diskualifikasi'),
+                    subtitle: Text('Tetap ikut undian hadiah lain'),
+                  ),
+                ),
+              ],
             ),
     );
   }

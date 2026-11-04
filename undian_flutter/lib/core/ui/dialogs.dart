@@ -109,5 +109,15 @@ Future<String?> askForfeitReason(BuildContext context, String name) => askText(
   label: 'Alasan',
   initial: 'Tidak hadir saat dipanggil',
   confirmLabel: 'Tandai hangus',
-  hint: 'Unit hadiah kembali ke stok dan bisa langsung diundi ulang.',
+  hint: 'Unit hadiah kembali ke stok dan bisa langsung diundi ulang. $name tidak ikut undian apa pun lagi.',
+);
+
+/// Alasan diskualifikasi dari satu hadiah; dipakai di panel operator dan daftar pemenang.
+Future<String?> askDisqualifyReason(BuildContext context, String name, String prizeName) => askText(
+  context,
+  title: 'Diskualifikasi $name dari $prizeName?',
+  label: 'Alasan',
+  initial: 'Tidak memenuhi syarat hadiah ini',
+  confirmLabel: 'Diskualifikasi',
+  hint: 'Unit hadiah kembali ke stok dan bisa diundi ulang. $name tetap boleh ikut undian hadiah lain.',
 );

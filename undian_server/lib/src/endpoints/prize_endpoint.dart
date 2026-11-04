@@ -44,7 +44,7 @@ class PrizeEndpoint extends Endpoint {
       final event = await requireEvent(session, existing.eventId, roles: adminRole, transaction: tx);
       final used = await PrizeWinner.db.count(
         session,
-        where: (t) => t.prizeId.equals(id) & t.status.notEquals(WinnerStatus.hangus),
+        where: (t) => t.prizeId.equals(id) & t.status.inSet(_stockStatuses),
         transaction: tx,
       );
       ensureValid(core.UndianRules.prizeQuantityProblem(quantity: prize.quantity, used: used));
@@ -60,6 +60,12 @@ class PrizeEndpoint extends Endpoint {
       return saved;
     });
   }
+
+  /// Status pemenang yang memakai unit hadiah (bukan hangus atau diskualifikasi).
+  static final _stockStatuses = {
+    for (final s in WinnerStatus.values)
+      if (core.WinnerStatus.values.byName(s.name).usesStock) s,
+  };
 
   /// Menghapus hadiah yang belum pernah diundi.
   Future<void> delete(Session session, int prizeId) async {

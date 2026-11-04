@@ -4,21 +4,34 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:undian_flutter/app/fonts.dart';
+import 'package:undian_flutter/features/branding/branding.dart';
 import 'package:undian_flutter/features/participants/import/import_dialog.dart';
+import 'package:undian_flutter/features/stage/operator_panel.dart';
 import 'package:undian_flutter/features/stage/stage_controller.dart';
 import 'package:undian_flutter/features/stage/stage_page.dart';
-import 'package:undian_flutter/features/stage/stage_routes.dart';
 
-/// Membuka panggung demo dan mengembalikan container ProviderScope milik panggung.
-Future<ProviderContainer> pumpDemoStage(WidgetTester tester) async {
+import 'support/local_stage_gateway.dart';
+
+/// Membuka panggung berisi data contoh dan mengembalikan container ProviderScope milik panggung.
+Future<ProviderContainer> pumpStage(WidgetTester tester) async {
   tester.view.physicalSize = const Size(1920, 1080);
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.reset);
+  final gateway = LocalStageGateway();
   final router = GoRouter(
-    initialLocation: '/demo',
+    initialLocation: '/panggung',
     routes: [
       GoRoute(path: '/', builder: (_, _) => const Text('Beranda')),
-      GoRoute(path: '/demo', builder: (_, _) => const DemoStageRoute()),
+      GoRoute(
+        path: '/panggung',
+        builder: (_, _) => ProviderScope(
+          overrides: [
+            stageGatewayProvider.overrideWithValue(gateway),
+            stageBrandingProvider.overrideWithValue(const Branding(organizationName: 'PT Maju Bersama')),
+          ],
+          child: const StagePage(),
+        ),
+      ),
     ],
   );
   await tester.pumpWidget(ProviderScope(child: MaterialApp.router(routerConfig: router)));
@@ -30,9 +43,10 @@ Future<ProviderContainer> pumpDemoStage(WidgetTester tester) async {
 void main() {
   setUp(() => AppFonts.useGoogleFonts = false);
 
-  testWidgets('panggung demo tampil dan Spasi memulai undian', (tester) async {
-    final container = await pumpDemoStage(tester);
+  testWidgets('panggung tampil dan Spasi memulai undian', (tester) async {
+    final container = await pumpStage(tester);
     expect(find.text('Panel Operator'), findsOneWidget);
+    expect(find.text('PT MAJU BERSAMA'), findsOneWidget);
     expect(find.text('HADIAH BERIKUTNYA'), findsOneWidget);
 
     await tester.sendKeyEvent(LogicalKeyboardKey.space);
@@ -46,25 +60,28 @@ void main() {
     expect(find.text('LANJUT  (Spasi)'), findsOneWidget);
   });
 
-  testWidgets('identitas demo bisa diubah, dan spasi saat mengetik tidak memicu undian', (tester) async {
-    final container = await pumpDemoStage(tester);
-    await tester.tap(find.text('Tampilan'));
+  testWidgets('Spasi saat mengetik di dialog tidak memicu undian', (tester) async {
+    final container = await pumpStage(tester);
+    showDialog<void>(
+      context: tester.element(find.byType(StagePage)),
+      builder: (_) => const AlertDialog(content: TextField(autofocus: true)),
+    );
     await tester.pump(const Duration(milliseconds: 300));
-
-    await tester.enterText(find.byType(TextField).first, 'PT Maju Bersama');
+    await tester.enterText(find.byType(TextField), 'Tidak hadir');
     await tester.sendKeyEvent(LogicalKeyboardKey.space);
-    await tester.tap(find.text('Biru Korporat'));
-    await tester.tap(find.text('Simpan'));
-    await tester.pump(const Duration(milliseconds: 300));
-
+    await tester.pump();
     expect(container.read(stageControllerProvider).phase, isA<StageIdle>());
-    expect(find.text('PT MAJU BERSAMA'), findsOneWidget);
-    expect(find.text('PM'), findsOneWidget);
   });
 
   testWidgets('Spasi tetap berfungsi setelah operator mengklik hadiah di panel', (tester) async {
-    final container = await pumpDemoStage(tester);
-    await tester.tap(find.text('Sepeda Motor Matic'));
+    final container = await pumpStage(tester);
+    final motor = find.text('Sepeda Motor Matic');
+    await tester.scrollUntilVisible(
+      motor,
+      200,
+      scrollable: find.descendant(of: find.byType(OperatorPanel), matching: find.byType(Scrollable)).first,
+    );
+    await tester.tap(motor);
     await tester.pump();
 
     await tester.sendKeyEvent(LogicalKeyboardKey.space);
@@ -87,7 +104,7 @@ void main() {
   });
 
   testWidgets('Esc keluar dari panggung', (tester) async {
-    await pumpDemoStage(tester);
+    await pumpStage(tester);
     await tester.sendKeyEvent(LogicalKeyboardKey.escape);
     await tester.pumpAndSettle();
     expect(find.text('Beranda'), findsOneWidget);

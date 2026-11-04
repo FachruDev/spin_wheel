@@ -24,4 +24,15 @@ Prize toCorePrize(api.EventPrize p) => Prize(
 );
 
 Winner toCoreWinner(api.PrizeWinner w) =>
-    Winner(participantId: w.participantId, prizeId: w.prizeId, status: WinnerStatus.values.byName(w.status.name));
+    Winner(participantId: w.participantId, prizeId: w.prizeId, status: w.status.toCore);
+
+/// Aturan status pemenang dari `undian_core`, untuk model server.
+extension WinnerStatusRules on api.WinnerStatus {
+  WinnerStatus get toCore => WinnerStatus.values.byName(name);
+
+  /// Kemenangan sah yang memakai satu unit hadiah (bukan hangus atau diskualifikasi).
+  bool get usesStock => toCore.usesStock;
+
+  /// Hangus atau diskualifikasi: final, unit hadiahnya sudah kembali ke stok.
+  bool get isFinal => toCore.isFinal;
+}

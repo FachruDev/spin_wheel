@@ -13,11 +13,8 @@ class EventStageGateway implements StageGateway {
   final UndianRepository _repository;
   final api.DrawEvent _event;
 
-  /// id catatan pemenang per (peserta, hadiah); dipakai saat menandai hangus.
+  /// id catatan pemenang per (peserta, hadiah); dipakai saat membatalkan pemenang.
   final _recordIds = <(int, int), int>{};
-
-  @override
-  bool get isDemo => false;
 
   int get _eventId => _event.id!;
 
@@ -53,9 +50,9 @@ class EventStageGateway implements StageGateway {
   }
 
   @override
-  Future<void> forfeit(Winner winner, String reason) async {
+  Future<void> cancelWinner(Winner winner, WinnerStatus status, String reason) async {
     final id = _recordIds[(winner.participantId, winner.prizeId)];
     if (id == null) throw api.UndianException(message: 'Data pemenang tidak ditemukan. Muat ulang panggung.');
-    await _repository.setWinnerStatus(id, api.WinnerStatus.hangus, reason);
+    await _repository.setWinnerStatus(id, api.WinnerStatus.values.byName(status.name), reason);
   }
 }

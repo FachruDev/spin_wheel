@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:serverpod_auth_idp_flutter/serverpod_auth_idp_flutter.dart';
 
 import '../../core/server/server_providers.dart';
@@ -172,7 +171,6 @@ class _SignInPageState extends ConsumerState<SignInPage> {
       case EmailFlowScreen.login:
         link('Belum punya akun? Daftar', () => _auth.navigateTo(EmailFlowScreen.startRegistration));
         link('Lupa password', () => _auth.navigateTo(EmailFlowScreen.requestPasswordReset));
-        link('Coba mode demo tanpa akun', () => context.go('/demo'));
       case EmailFlowScreen.verifyRegistration || EmailFlowScreen.verifyPasswordReset:
         link('Kirim ulang kode', _auth.resendVerificationCode);
         link('Kembali ke halaman masuk', () => _auth.navigateTo(EmailFlowScreen.login));

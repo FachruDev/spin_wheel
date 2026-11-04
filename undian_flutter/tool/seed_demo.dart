@@ -10,7 +10,8 @@ import 'dart:io';
 import 'package:serverpod_auth_core_client/serverpod_auth_core_client.dart' show ClientAuthSessionManagerExtension;
 import 'package:serverpod_auth_idp_client/serverpod_auth_idp_client.dart';
 import 'package:undian_client/undian_client.dart';
-import 'package:undian_flutter/features/stage/demo_data.dart';
+
+import 'sample_data.dart';
 
 /// Akun khusus database lokal. Bukan akun sungguhan.
 const demoEmail = 'demo@undian.test';
@@ -41,7 +42,7 @@ Future<void> main(List<String> args) async {
       await client.event.create(organization.id!, eventName, DateTime.now().toUtc(), false);
 
   final result = await client.participant.importRows(event.id!, [
-    for (final p in DemoData.participants())
+    for (final p in SampleData.participants())
       ParticipantInput(
         nik: p.nik,
         name: p.name,
@@ -56,7 +57,7 @@ Future<void> main(List<String> args) async {
 
   if ((await client.prize.list(event.id!)).isEmpty) {
     var order = 0;
-    for (final p in DemoData.prizes()) {
+    for (final p in SampleData.prizes()) {
       await client.prize.save(
         EventPrize(
           eventId: event.id!,

@@ -397,6 +397,42 @@ class Endpoints extends _i1.EndpointDispatch {
                 params['allowMultipleWins'],
               ),
         ),
+        'update': _i1.MethodConnector(
+          name: 'update',
+          params: {
+            'eventId': _i1.ParameterDescription(
+              name: 'eventId',
+              type: _i1.getType<int>(),
+              nullable: false,
+            ),
+            'name': _i1.ParameterDescription(
+              name: 'name',
+              type: _i1.getType<String>(),
+              nullable: false,
+            ),
+            'eventDate': _i1.ParameterDescription(
+              name: 'eventDate',
+              type: _i1.getType<DateTime?>(),
+              nullable: true,
+            ),
+            'allowMultipleWins': _i1.ParameterDescription(
+              name: 'allowMultipleWins',
+              type: _i1.getType<bool>(),
+              nullable: false,
+            ),
+          },
+          call:
+              (
+                _i1.Session session,
+                Map<String, dynamic> params,
+              ) async => (endpoints['event'] as _i5.EventEndpoint).update(
+                session,
+                params['eventId'],
+                params['name'],
+                params['eventDate'],
+                params['allowMultipleWins'],
+              ),
+        ),
         'list': _i1.MethodConnector(
           name: 'list',
           params: {
@@ -547,6 +583,75 @@ class Endpoints extends _i1.EndpointDispatch {
                     params['eventId'],
                     params['rows'],
                     params['replaceAll'],
+                  ),
+        ),
+        'add': _i1.MethodConnector(
+          name: 'add',
+          params: {
+            'eventId': _i1.ParameterDescription(
+              name: 'eventId',
+              type: _i1.getType<int>(),
+              nullable: false,
+            ),
+            'input': _i1.ParameterDescription(
+              name: 'input',
+              type: _i1.getType<_i11.ParticipantInput>(),
+              nullable: false,
+            ),
+          },
+          call:
+              (
+                _i1.Session session,
+                Map<String, dynamic> params,
+              ) async =>
+                  (endpoints['participant'] as _i7.ParticipantEndpoint).add(
+                    session,
+                    params['eventId'],
+                    params['input'],
+                  ),
+        ),
+        'update': _i1.MethodConnector(
+          name: 'update',
+          params: {
+            'participantId': _i1.ParameterDescription(
+              name: 'participantId',
+              type: _i1.getType<int>(),
+              nullable: false,
+            ),
+            'input': _i1.ParameterDescription(
+              name: 'input',
+              type: _i1.getType<_i11.ParticipantInput>(),
+              nullable: false,
+            ),
+          },
+          call:
+              (
+                _i1.Session session,
+                Map<String, dynamic> params,
+              ) async =>
+                  (endpoints['participant'] as _i7.ParticipantEndpoint).update(
+                    session,
+                    params['participantId'],
+                    params['input'],
+                  ),
+        ),
+        'delete': _i1.MethodConnector(
+          name: 'delete',
+          params: {
+            'participantId': _i1.ParameterDescription(
+              name: 'participantId',
+              type: _i1.getType<int>(),
+              nullable: false,
+            ),
+          },
+          call:
+              (
+                _i1.Session session,
+                Map<String, dynamic> params,
+              ) async =>
+                  (endpoints['participant'] as _i7.ParticipantEndpoint).delete(
+                    session,
+                    params['participantId'],
                   ),
         ),
       },

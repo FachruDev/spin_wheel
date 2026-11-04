@@ -1,20 +1,17 @@
 import 'package:undian_core/undian_core.dart';
+import 'package:undian_flutter/features/stage/gateway/stage_gateway.dart';
 
-import '../demo_data.dart';
-import 'stage_gateway.dart';
+import '../../tool/sample_data.dart';
 
-/// Mode demo: data contoh dan undian lokal, tanpa server. Untuk presentasi dan latihan.
-class DemoStageGateway implements StageGateway {
-  DemoStageGateway({DrawEngine? engine}) : _engine = engine ?? DrawEngine();
+/// Panggung untuk tes: data contoh dan undian lokal, tanpa server.
+class LocalStageGateway implements StageGateway {
+  LocalStageGateway({DrawEngine? engine}) : _engine = engine ?? DrawEngine();
 
   final DrawEngine _engine;
 
   @override
-  bool get isDemo => true;
-
-  @override
   Future<StageData> load() async =>
-      StageData(participants: DemoData.participants(), prizes: DemoData.prizes(), winners: const []);
+      StageData(participants: SampleData.participants(), prizes: SampleData.prizes(), winners: const []);
 
   @override
   Future<DrawOutcome> draw({required Prize prize, required int count, required StageData current}) async {
@@ -39,5 +36,5 @@ class DemoStageGateway implements StageGateway {
   }
 
   @override
-  Future<void> forfeit(Winner winner, String reason) async {}
+  Future<void> cancelWinner(Winner winner, WinnerStatus status, String reason) async {}
 }

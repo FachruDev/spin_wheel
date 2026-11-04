@@ -33,11 +33,6 @@ class OrganizationsPage extends ConsumerWidget {
               icon: const Icon(Icons.file_download_rounded),
               label: const Text('Impor paket acara'),
             ),
-          TextButton.icon(
-            onPressed: () => context.push('/demo'),
-            icon: const Icon(Icons.slideshow_rounded),
-            label: const Text('Mode demo'),
-          ),
           if (offline)
             IconButton(
               tooltip: 'Keluar dari mode offline',

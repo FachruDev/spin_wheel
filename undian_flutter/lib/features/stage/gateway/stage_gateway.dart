@@ -29,16 +29,15 @@ class DrawOutcome {
   final List<Participant> pool;
 }
 
-/// Sumber data panggung. Panggung tidak tahu apakah undian berjalan lokal (demo) atau di server.
+/// Sumber data panggung. Panggung tidak tahu apakah undian dicatat di server atau di laptop
+/// (mode offline).
 abstract interface class StageGateway {
-  /// True untuk mode demo: identitas bisa diubah langsung dari panel operator.
-  bool get isDemo;
-
   Future<StageData> load();
 
   /// Mengundi [count] pemenang untuk [prize]. [current] adalah keadaan panggung saat ini.
   Future<DrawOutcome> draw({required Prize prize, required int count, required StageData current});
 
-  /// Menandai [winner] hangus; unit hadiahnya kembali ke stok.
-  Future<void> forfeit(Winner winner, String reason);
+  /// Membatalkan [winner] dengan [status] hangus atau diskualifikasi; unit hadiahnya kembali ke
+  /// stok.
+  Future<void> cancelWinner(Winner winner, WinnerStatus status, String reason);
 }

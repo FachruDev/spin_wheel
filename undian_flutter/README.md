@@ -14,12 +14,12 @@ lib/
     auth/                → masuk, daftar akun, lupa password (email)
     organizations/       → organisasi saya, identitas (nama, logo, warna)
     events/              → daftar acara, halaman acara (tab peserta/hadiah/pemenang)
-    participants/        → daftar peserta + import Excel (baca .xlsx, cocokkan kolom, pratinjau)
+    participants/        → daftar peserta, tambah/ubah/hapus lewat formulir, import Excel (cocokkan kolom)
     prizes/              → hadiah, stok, grup yang berhak
-    winners/             → pemenang per putaran, ubah status (diserahkan/ditransfer/hangus)
+    winners/             → pemenang per putaran, ubah status (diserahkan/ditransfer/hangus/diskualifikasi)
     branding/            → model & dialog identitas, logo
     stage/               → layar panggung, panel operator, animasi
-      gateway/           → sumber data panggung: demo, atau acara (server/offline)
+      gateway/           → sumber data panggung: acara di server atau di laptop (mode offline)
     offline/             → mode offline (desktop)
       store/             → data offline di file laptop, aturan sama dengan server
       package/           → paket acara .undian (ekspor/impor antar laptop)
@@ -53,7 +53,17 @@ flutter run -d chrome  --dart-define=SERVER_URL=http://localhost:8080/
 flutter run -d windows --dart-define=SERVER_URL=http://localhost:8080/
 ```
 
-Tanpa `SERVER_URL`, aplikasi memakai `http://localhost:8080/`. Mode demo (`/demo`) tidak butuh server.
+Tanpa `SERVER_URL`, aplikasi memakai `http://localhost:8080/`.
+
+## Status pemenang
+
+- **Belum diserahkan / Diserahkan / Ditransfer**: pemenang sah, memakai satu unit hadiah.
+- **Hangus** (mis. tidak hadir): unit kembali ke stok, orangnya tidak ikut undian apa pun lagi.
+- **Diskualifikasi** (tidak memenuhi syarat hadiah itu): unit kembali ke stok, orangnya tidak ikut
+  undian ulang hadiah itu, tetapi tetap boleh ikut undian hadiah lain.
+
+Hangus dan diskualifikasi wajib beralasan dan tidak bisa dibatalkan. Keduanya bisa dipilih dari tab
+Pemenang maupun dari panel operator di panggung.
 
 ## Template Excel peserta
 
@@ -87,10 +97,15 @@ Ikon aplikasi (`windows/runner/resources/app_icon.ico`, `web/favicon.png`, `web/
 wizard installer digambar oleh `tool/generate_icons.dart`; setelah mengubah desainnya jalankan
 `dart run tool/generate_icons.dart`.
 
-## Data demo di server lokal
+## Data contoh
 
-`dart run tool/seed_demo.dart <file-log-server>` membuat akun, organisasi, dan acara demo
-(430 peserta fiktif, 6 hadiah) di server pengembangan. Jangan dipakai ke server produksi.
+Data fiktif (400 peserta, 10 hadiah doorprize dan grand prize) ada di `tool/sample_data.dart`.
+
+- `dart run tool/generate_sample_files.dart [folder]` membuat `peserta_contoh_400.xlsx` (untuk
+  Import Excel), `hadiah_contoh_10.xlsx` (daftar hadiah), dan `acara_contoh.undian` (acara siap
+  pakai untuk Mode offline → Impor paket acara). Bawaannya di `build/contoh`.
+- `dart run tool/seed_demo.dart <file-log-server>` membuat akun, organisasi, dan acara demo di server
+  pengembangan. Jangan dipakai ke server produksi.
 
 ## Tes
 

@@ -58,6 +58,32 @@ void main() {
         isNull,
       );
     });
+
+    test('diskualifikasi wajib beralasan dan final', () {
+      expect(
+        UndianRules.statusChangeProblem(current: WinnerStatus.sah, next: WinnerStatus.diskualifikasi),
+        'Alasan wajib diisi untuk mendiskualifikasi pemenang.',
+      );
+      expect(
+        UndianRules.statusChangeProblem(
+          current: WinnerStatus.diserahkan,
+          next: WinnerStatus.diskualifikasi,
+          note: 'Bukan karyawan area Bogor',
+        ),
+        isNull,
+      );
+      expect(
+        UndianRules.statusChangeProblem(current: WinnerStatus.diskualifikasi, next: WinnerStatus.sah),
+        'Pemenang yang sudah didiskualifikasi tidak bisa diubah statusnya.',
+      );
+    });
+  });
+
+  test('peserta dari formulir', () {
+    expect(UndianRules.participantProblem(const ImportRow(nik: '', name: 'Ani')), 'NIK wajib diisi.');
+    expect(UndianRules.participantProblem(const ImportRow(nik: '1', name: '')), 'Nama peserta wajib diisi.');
+    expect(UndianRules.participantProblem(const ImportRow(nik: '1', name: 'Ani', points: 0)), 'Poin minimal 1.');
+    expect(UndianRules.participantProblem(const ImportRow(nik: '1', name: 'Ani')), isNull);
   });
 
   test('putaran, jumlah per putaran, logo, nama', () {

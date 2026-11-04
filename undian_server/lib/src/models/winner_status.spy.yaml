@@ -7,5 +7,7 @@ values:
   - diserahkan
   ### Hadiah dikirim/ditransfer (mis. peserta daerah yang tidak hadir).
   - ditransfer
-  ### Pemenang tidak hadir/batal; unit hadiah kembali ke stok.
+  ### Pemenang tidak hadir/batal; unit hadiah kembali ke stok dan orangnya tidak ikut undian lagi.
   - hangus
+  ### Tidak memenuhi syarat hadiah ini; unit kembali ke stok, orangnya tetap boleh ikut hadiah lain.
+  - diskualifikasi

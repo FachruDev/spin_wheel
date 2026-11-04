@@ -10,7 +10,7 @@ import 'stage_state.dart';
 
 export 'stage_state.dart';
 
-/// Sumber data panggung. Selalu di-override per halaman (demo atau acara di server).
+/// Sumber data panggung. Selalu di-override per halaman acara (server atau mode offline).
 final stageGatewayProvider = Provider<StageGateway>(
   (ref) => throw UnimplementedError('stageGatewayProvider harus di-override'),
   dependencies: const [],
@@ -140,29 +140,31 @@ class StageController extends Notifier<StageState> {
     }
   }
 
-  /// Pemenang tidak hadir: tandai hangus, unitnya kembali ke stok untuk diundi ulang.
-  Future<void> forfeit(Winner winner, String reason) async {
-    if (state.isLocked) return;
+  /// Membatalkan pemenang: hangus (tidak hadir) atau diskualifikasi (tidak memenuhi syarat
+  /// hadiah ini). Unitnya kembali ke stok untuk diundi ulang.
+  Future<void> cancelWinner(Winner winner, WinnerStatus status, String reason) async {
+    if (state.isLocked || !status.isFinal) return;
     state = state.copyWith(busy: true, message: null);
     try {
-      await _gateway.forfeit(winner, reason);
+      await _gateway.cancelWinner(winner, status, reason);
       if (!ref.mounted) return;
       final name = state.participantById[winner.participantId]?.name ?? 'Pemenang';
+      final prize = state.prizeById(winner.prizeId).name;
       state = state.copyWith(
         busy: false,
         winners: [
           for (final w in state.winners)
-            w.participantId == winner.participantId && w.prizeId == winner.prizeId
-                ? w.copyWith(status: WinnerStatus.hangus)
-                : w,
+            w.participantId == winner.participantId && w.prizeId == winner.prizeId ? w.copyWith(status: status) : w,
         ],
-        message: '$name hangus. 1 unit kembali ke stok untuk diundi ulang.',
+        message: status == WinnerStatus.hangus
+            ? '$name hangus. 1 unit kembali ke stok untuk diundi ulang.'
+            : '$name didiskualifikasi dari $prize. 1 unit kembali ke stok; $name tetap ikut undian hadiah lain.',
       );
     } catch (e) {
       if (ref.mounted) state = state.copyWith(busy: false, message: describeError(e));
     }
   }
 
-  /// Memuat ulang data dari sumbernya (demo: kembali ke data awal).
+  /// Memuat ulang data dari sumbernya.
   void reload() => ref.invalidateSelf();
 }

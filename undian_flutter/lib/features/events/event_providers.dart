@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:undian_client/undian_client.dart';
 
 import '../../core/data/repository_providers.dart';
+import '../../core/server/core_mapping.dart';
 
 /// Penanda satu acara di dalam satu organisasi (dipakai sebagai argumen family).
 typedef EventRef = ({int organizationId, int eventId});
@@ -41,8 +42,8 @@ Map<String, int> groupCounts(Iterable<EventParticipant> participants) {
   return Map.fromEntries(counts.entries.toList()..sort((a, b) => a.key.compareTo(b.key)));
 }
 
-/// Sisa unit hadiah: jumlah unit dikurangi pemenang yang tidak hangus.
+/// Sisa unit hadiah: jumlah unit dikurangi pemenang sah (bukan hangus atau diskualifikasi).
 int remainingUnits(EventPrize prize, Iterable<PrizeWinner> winners) {
-  final used = winners.where((w) => w.prizeId == prize.id && w.status != WinnerStatus.hangus).length;
+  final used = winners.where((w) => w.prizeId == prize.id && w.status.usesStock).length;
   return prize.quantity - used;
 }

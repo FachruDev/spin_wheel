@@ -109,7 +109,7 @@ void main() {
     expect(winners.rows.first.cells[4], '03090234');
     expect(winners.rows[1].cells[8], 'Hangus');
     final summary = sheets[1].table();
-    expect(summary.rows.first.cells, ['Voucher Belanja', 'Doorprize', '3', '2', '1', '1']);
+    expect(summary.rows.first.cells, ['Voucher Belanja', 'Doorprize', '3', '2', '1', '0', '1']);
   });
 
   test('teks PDF: diakritik jadi huruf dasar, aksara non-Latin jadi tanda tanya', () {

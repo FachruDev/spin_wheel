@@ -19,10 +19,10 @@ const _winnerHeaders = [
 ];
 const _winnerWidths = [6.0, 9.0, 28.0, 12.0, 14.0, 30.0, 18.0, 18.0, 17.0, 18.0, 30.0];
 
-const _summaryHeaders = ['Hadiah', 'Jenis', 'Unit', 'Pemenang sah', 'Hangus', 'Sisa'];
-const _summaryWidths = [32.0, 12.0, 8.0, 14.0, 10.0, 8.0];
+const _summaryHeaders = ['Hadiah', 'Jenis', 'Unit', 'Pemenang sah', 'Hangus', 'Didiskualifikasi', 'Sisa'];
+const _summaryWidths = [32.0, 12.0, 8.0, 14.0, 10.0, 16.0, 8.0];
 
-/// File Excel hasil undian: sheet Pemenang (termasuk yang hangus), Rekap Hadiah, dan Info.
+/// File Excel hasil undian: sheet Pemenang (termasuk yang hangus/didiskualifikasi), Rekap Hadiah, dan Info.
 List<int> buildWinnersWorkbook(WinnerReport report) {
   final book = xl.Excel.createExcel();
   book.rename(book.getDefaultSheet()!, 'Pemenang');
@@ -54,7 +54,7 @@ List<int> buildWinnersWorkbook(WinnerReport report) {
   writeExcelHeader(summary, _summaryHeaders, _summaryWidths);
   writeExcelRows(summary, [
     for (final s in report.summaries)
-      [s.prize.name, prizeKindLabel(s.prize.kind), s.prize.quantity, s.valid, s.forfeited, s.remaining],
+      [s.prize.name, prizeKindLabel(s.prize.kind), s.prize.quantity, s.valid, s.forfeited, s.disqualified, s.remaining],
   ]);
 
   final info = book['Info'];
