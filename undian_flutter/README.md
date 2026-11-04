@@ -36,6 +36,32 @@ Tanpa `SERVER_URL`, aplikasi memakai `http://localhost:8080/`. Mode demo (`/demo
 Contoh, dan Petunjuk. Isinya dibuat dari `lib/features/participants/import/participant_template.dart`;
 setelah mengubah file itu, jalankan `dart run tool/generate_template.dart`.
 
+## Installer Windows (Setup.exe)
+
+Untuk dibagikan ke laptop lain. Butuh Flutter, Visual Studio 2022 (workload *Desktop development
+with C++*), dan [Inno Setup 6](https://jrsoftware.org/isdl.php) di laptop yang membangun.
+
+```powershell
+powershell -ExecutionPolicy Bypass -File tool\build_windows_installer.ps1 -ServerUrl https://api.undian.contoh.co.id/
+```
+
+Hasilnya `build\installer\Undian-Setup-<versi>.exe` (sekitar 12 MB). Versi diambil dari `version:`
+di `pubspec.yaml`; naikkan sebelum membagikan versi baru, maka installer akan memperbarui aplikasi
+yang sudah terpasang.
+
+- **Alamat server tertanam saat build.** `-ServerUrl` harus alamat API produksi (`API_DOMAIN` di
+  `deploy/.env`) dan wajib `https://` kecuali `localhost`. Ganti server = build ulang installer.
+- Dipasang tanpa hak admin ke `%LOCALAPPDATA%\Programs\Undian`, dengan pintasan Start Menu dan
+  (opsional) desktop. Uninstall lewat *Settings → Apps*.
+- Runtime Visual C++ ikut dibundel, jadi laptop tujuan tidak perlu memasang apa pun lagi.
+- Installer belum ditandatangani (*code signing*), sehingga Windows SmartScreen bisa menampilkan
+  "Windows protected your PC": klik **More info → Run anyway**.
+- Pemasangan senyap untuk banyak laptop: `Undian-Setup-<versi>.exe /VERYSILENT /SUPPRESSMSGBOXES`.
+
+Ikon aplikasi (`windows/runner/resources/app_icon.ico`, `web/favicon.png`, `web/icons/`) dan gambar
+wizard installer digambar oleh `tool/generate_icons.dart`; setelah mengubah desainnya jalankan
+`dart run tool/generate_icons.dart`.
+
 ## Data demo di server lokal
 
 `dart run tool/seed_demo.dart <file-log-server>` membuat akun, organisasi, dan acara demo
